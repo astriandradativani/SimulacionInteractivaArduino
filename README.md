@@ -20,3 +20,5 @@ https://github.com/astriandradativani/SimulacionInteractivaArduino
 ## Autoría
 
 Esp. Ing. Astri Edith Andrada Tivani
+
+Este contenido está bajo licencia CC BY-NC-SA 4.0 — ver archivo LICENSE
