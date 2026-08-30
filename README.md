@@ -10,7 +10,7 @@ Sol – LDR – Arduino UNO – resistencia – LED.
 Una vez publicado con GitHub Pages, la página queda disponible en:
 
 ```
-https://<tu-usuario-de-github>.github.io/<nombre-del-repositorio>/
+https://<astriandradativani>.github.io/<astriandradativani>/
 ```
 
 ## Contenido
