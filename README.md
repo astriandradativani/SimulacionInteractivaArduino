@@ -10,7 +10,7 @@ Sol – LDR – Arduino UNO – resistencia – LED.
 Una vez publicado con GitHub Pages, la página queda disponible en:
 
 ```
-https://<astriandradativani>.github.io/<astriandradativani>/
+https://github.com/astriandradativani/SimulacionInteractivaArduino
 ```
 
 ## Contenido
