@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El circuito en vivo — Sol, LDR y LED</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#16261c; --bg-panel:#1c3226; --bg-panel-2:#213a2c;
+    --chalk:#f2ecdd; --chalk-dim:#a9b8ab;
+    --fisico:#e7b44b; --fisico-soft:rgba(231,180,75,.14);
+    --traduccion:#cc8b9c; --traduccion-soft:rgba(204,139,156,.14);
+    --digital:#6fc7c2; --digital-soft:rgba(111,199,194,.14);
+    --line:rgba(242,236,221,.14);
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg);
+    background-image:
+      radial-gradient(ellipse at 20% -10%, rgba(111,199,194,.08), transparent 45%),
+      radial-gradient(ellipse at 90% 10%, rgba(231,180,75,.06), transparent 40%);
+    color:var(--chalk); font-family:'Inter',sans-serif; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;}
+  code,.mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 24px;}
+
+  .hero{padding:52px 0 30px;}
+  .hero .kicker{color:var(--chalk-dim);font-size:.95rem;margin:0 0 14px;}
+  .hero h1{font-size:clamp(1.8rem,4.4vw,2.5rem);line-height:1.14;margin:0 0 12px;max-width:22ch;}
+  .hero h1 .u{text-decoration:underline;text-decoration-color:var(--digital);text-decoration-thickness:3px;text-underline-offset:6px;}
+  .hero p.lead{max-width:66ch;font-size:1.0rem;margin:0;}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px;margin-bottom:26px;}
+
+  /* SLIDER */
+  .sun-control{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:22px;}
+  .sun-control label{font-family:'Space Grotesk';font-size:.95rem;white-space:nowrap;}
+  .sun-control input[type=range]{
+    flex:1; min-width:220px; height:6px; border-radius:4px; appearance:none;
+    background:linear-gradient(90deg, #2a2a2a, var(--fisico));
+    outline:none;
+  }
+  .sun-control input[type=range]::-webkit-slider-thumb{
+    appearance:none; width:20px; height:20px; border-radius:50%;
+    background:var(--fisico); border:3px solid var(--bg); cursor:pointer;
+    box-shadow:0 0 0 2px var(--fisico);
+  }
+  .sun-control input[type=range]::-moz-range-thumb{
+    width:20px; height:20px; border-radius:50%; background:var(--fisico); border:3px solid var(--bg); cursor:pointer;
+  }
+  .sun-control .pct{font-family:'JetBrains Mono';color:var(--fisico);font-weight:600;min-width:54px;text-align:right;}
+
+  svg text{font-family:'JetBrains Mono',monospace;}
+  .lbl-es{font-family:'Inter',sans-serif;}
+
+  .diagram-svg{width:100%;height:auto;display:block;}
+
+  /* PIPELINE */
+  .pipe-intro{color:var(--chalk-dim);font-size:.92rem;margin:0 0 24px;max-width:70ch;}
+  .pipeline{display:flex;flex-direction:column;gap:0;}
+  .p-step{position:relative;padding-left:56px;padding-bottom:22px;}
+  .p-step::before{
+    content:"";position:absolute;left:19px;top:40px;bottom:0;width:2px;background:var(--line);
+  }
+  .p-step:last-child::before{display:none;}
+  .p-num{
+    position:absolute;left:0;top:0;width:40px;height:40px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+    background:var(--bg);border:2px solid var(--cat-color);
+  }
+  .p-step[data-cat="fisico"]{--cat-color:var(--fisico);}
+  .p-step[data-cat="traduccion"]{--cat-color:var(--traduccion);}
+  .p-step[data-cat="digital"]{--cat-color:var(--digital);}
+  .p-card{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:14px 16px;}
+  .p-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap;}
+  .p-title{font-family:'Space Grotesk';font-size:.95rem;}
+  .p-tag{font-size:.7rem;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--cat-color);color:#0d1710;}
+  .p-desc{font-size:.85rem;color:var(--chalk-dim);margin:0 0 10px;}
+  .p-live{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  }
+  .p-live .readout{font-family:'JetBrains Mono';font-size:.92rem;color:var(--cat-color);}
+  .p-live .sig-svg{width:150px;height:32px;flex-shrink:0;}
+  .bits{display:flex;gap:2px;flex-wrap:wrap;}
+  .bit{width:15px;height:18px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:.66rem;border-radius:2px;background:rgba(242,236,221,.06);color:var(--chalk-dim);}
+  .bit.on{background:var(--digital-soft);color:var(--digital);font-weight:600;}
+  .chip{display:inline-block;font-family:'JetBrains Mono';font-size:.8rem;padding:4px 10px;border-radius:6px;background:var(--digital-soft);color:var(--digital);}
+
+  footer{padding:34px 0 50px;color:var(--chalk-dim);font-size:.82rem;border-top:1px solid var(--line);margin-top:10px;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <p class="kicker">Simulación interactiva · sensor de luz + LED</p>
+    <h1>El circuito <span class="u">en vivo</span></h1>
+    <p class="lead">Movés el sol y toda la cadena reacciona: cambia el voltaje que entra al Arduino, el número que sale del ADC, la orden que calcula el código y, al final, el brillo real del LED.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="panel">
+    <div class="sun-control">
+      <label for="sunSlider">☀️ Intensidad del sol</label>
+      <input type="range" id="sunSlider" min="0" max="100" value="55">
+      <span class="pct" id="sunPct">55%</span>
+    </div>
+
+    <svg id="circuitSvg" class="diagram-svg" viewBox="0 0 920 380" xmlns="http://www.w3.org/2000/svg">
+      <!-- rails -->
+      <line x1="140" y1="50" x2="700" y2="50" stroke="#f2ecdd" stroke-opacity=".35" stroke-width="2"/>
+      <text x="146" y="42" font-size="12" fill="#a9b8ab">5V</text>
+      <line x1="140" y1="330" x2="780" y2="330" stroke="#f2ecdd" stroke-opacity=".35" stroke-width="2"/>
+      <text x="146" y="352" font-size="12" fill="#a9b8ab">GND</text>
+      <!-- ground hatch -->
+      <g transform="translate(220,330)">
+        <line x1="0" y1="0" x2="0" y2="10" stroke="#a9b8ab" stroke-width="2"/>
+        <line x1="-8" y1="10" x2="8" y2="10" stroke="#a9b8ab" stroke-width="2"/>
+        <line x1="-5" y1="15" x2="5" y2="15" stroke="#a9b8ab" stroke-width="2"/>
+        <line x1="-2" y1="20" x2="2" y2="20" stroke="#a9b8ab" stroke-width="2"/>
+      </g>
+
+      <!-- SUN -->
+      <g id="sunGroup" transform="translate(85,95)">
+        <g id="sunRays" stroke="#e7b44b" stroke-width="3" stroke-linecap="round"></g>
+        <circle id="sunCore" r="24" fill="#e7b44b"/>
+      </g>
+      <text x="60" y="150" font-size="12" fill="#a9b8ab" class="lbl-es">Sol</text>
+
+      <!-- light arrows toward LDR -->
+      <g id="lightArrows" stroke="#e7b44b" stroke-width="2" fill="none" stroke-linecap="round">
+        <path d="M110,110 L165,150" marker-end="url(#arrow)"/>
+        <path d="M100,130 L160,168" marker-end="url(#arrow)"/>
+      </g>
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#e7b44b"/>
+        </marker>
+      </defs>
+
+      <!-- LDR branch -->
+      <line x1="200" y1="50" x2="200" y2="140" stroke="#f2ecdd" stroke-width="2"/>
+      <path d="M200,140 L192,148 L208,156 L192,164 L208,172 L200,180" stroke="#cc8b9c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <text x="215" y="163" font-size="12" fill="#cc8b9c">LDR</text>
+      <line x1="200" y1="180" x2="200" y2="240" stroke="#f2ecdd" stroke-width="2"/>
+      <circle cx="200" cy="240" r="3.5" fill="#f2ecdd"/>
+
+      <!-- fixed resistor to GND -->
+      <line x1="200" y1="240" x2="200" y2="270" stroke="#f2ecdd" stroke-width="2"/>
+      <path d="M200,270 L192,278 L208,286 L192,294 L208,302 L200,310" stroke="#f2ecdd" stroke-opacity=".7" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <text x="215" y="292" font-size="11" fill="#a9b8ab">R 10k</text>
+      <line x1="200" y1="310" x2="200" y2="330" stroke="#f2ecdd" stroke-width="2"/>
+
+      <!-- node to Arduino A0 -->
+      <line x1="200" y1="240" x2="300" y2="240" stroke="#6fc7c2" stroke-width="2.5"/>
+
+      <!-- Arduino box -->
+      <rect x="300" y="170" width="260" height="130" rx="8" fill="#213a2c" stroke="#6fc7c2" stroke-width="1.5"/>
+      <text x="430" y="228" font-size="15" fill="#f2ecdd" text-anchor="middle" font-weight="600">ARDUINO</text>
+      <text x="430" y="248" font-size="15" fill="#f2ecdd" text-anchor="middle" font-weight="600">UNO</text>
+      <text x="308" y="234" font-size="11" fill="#6fc7c2">A0</text>
+      <text x="520" y="204" font-size="11" fill="#cc8b9c" text-anchor="end">~9</text>
+
+      <!-- Arduino 5V pin up to rail -->
+      <line x1="380" y1="170" x2="380" y2="50" stroke="#f2ecdd" stroke-opacity=".35" stroke-width="2"/>
+      <!-- Arduino GND pin down to rail -->
+      <line x1="480" y1="300" x2="480" y2="330" stroke="#f2ecdd" stroke-opacity=".35" stroke-width="2"/>
+
+      <!-- output branch -->
+      <line x1="560" y1="210" x2="600" y2="210" stroke="#cc8b9c" stroke-width="2.5"/>
+      <path d="M600,210 L608,202 L616,218 L624,202 L632,218 L640,210" stroke="#f2ecdd" stroke-opacity=".7" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <text x="605" y="196" font-size="11" fill="#a9b8ab">R 220</text>
+      <line x1="640" y1="210" x2="675" y2="210" stroke="#cc8b9c" stroke-width="2.5"/>
+
+      <!-- LED symbol -->
+      <g transform="translate(675,210)">
+        <path d="M0,-16 L0,16 L26,0 Z" fill="none" stroke="#f2ecdd" stroke-width="2"/>
+        <line x1="26" y1="-16" x2="26" y2="16" stroke="#f2ecdd" stroke-width="2"/>
+        <circle id="ledGlow" cx="13" cy="0" r="34" fill="#e7b44b" opacity="0"/>
+        <g id="ledRays" stroke="#e7b44b" stroke-width="2" stroke-linecap="round" opacity="0">
+          <line x1="30" y1="-10" x2="42" y2="-20"/>
+          <line x1="32" y1="0" x2="46" y2="0"/>
+          <line x1="30" y1="10" x2="42" y2="20"/>
+        </g>
+        <path d="M0,-16 L0,16 L26,0 Z" fill="#e7b44b" id="ledFill" opacity="0.15"/>
+      </g>
+      <text x="700" y="245" font-size="12" fill="#a9b8ab" class="lbl-es">LED</text>
+      <line x1="701" y1="226" x2="701" y2="330" stroke="#f2ecdd" stroke-width="2"/>
+
+      <!-- live readouts on diagram -->
+      <text id="dTextV" x="245" y="255" font-size="12" fill="#cc8b9c">0.00 V</text>
+      <text id="dTextADC" x="320" y="270" font-size="11" fill="#6fc7c2">ADC 0</text>
+      <text id="dTextPWM" x="570" y="230" font-size="11" fill="#cc8b9c">PWM 0</text>
+    </svg>
+
+    <p class="pipe-intro" style="margin-top:6px;">El sol ilumina el LDR → el LDR y la resistencia forman un divisor de tensión → ese voltaje entra por A0 → el Arduino lo convierte, decide y arma la orden → esa orden sale por el pin ~9 y regula el brillo del LED.</p>
+  </div>
+
+  <div class="panel">
+    <h2 style="margin:0 0 6px;font-size:1.3rem;">La ruta del dato, paso a paso</h2>
+    <p class="pipe-intro">Los mismos siete pasos de siempre. Movés el sol arriba y cada valor de acá abajo se recalcula al instante.</p>
+    <div class="pipeline" id="pipeline"></div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="wrap">El circuito en vivo — un mismo dato, siete traducciones, hasta llegar al LED.<br>Esp. Ing. Astri Edith Andrada Tivani</div>
+</footer>
+
+<script>
+function bitsHtml(bits){
+  return `<div class="bits">${bits.split('').map(b=>`<span class="bit ${b==='1'?'on':''}">${b}</span>`).join('')}</div>`;
+}
+function pwmSvg(dutyPct, color){
+  const w = Math.max(2, Math.round(dutyPct/100*30));
+  const gap = 32 - w;
+  let d = `M2,28 `;
+  for(let i=0;i<3;i++){
+    const x0 = 2 + i*32;
+    d += `L${x0},${28-24} L${x0+w},${28-24} L${x0+w},28 L${x0+w+gap},28 `;
+  }
+  return `<svg viewBox="0 0 100 30" class="sig-svg" preserveAspectRatio="none"><path d="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+}
+function barSvg(pct, color){
+  const w = Math.max(1, Math.round(pct/100*96));
+  return `<svg viewBox="0 0 100 20" class="sig-svg" preserveAspectRatio="none">
+    <rect x="1" y="1" width="98" height="18" rx="4" fill="none" stroke="${color}" stroke-opacity=".4" stroke-width="1.5"/>
+    <rect x="2" y="2" width="${w}" height="16" rx="3" fill="${color}" opacity=".7"/>
+  </svg>`;
+}
+
+const stages = [
+  { cat:'fisico', icon:'☀️', title:'1. Estímulo físico', tag:'Sol', desc:'La cantidad de luz que llega al sensor cambia según la posición del control.', key:'sun' },
+  { cat:'traduccion', icon:'', title:'2. Sensado', tag:'LDR + R 10k', desc:'El divisor de tensión traduce la luz en un voltaje continuo, entre 0 y 5 V.', key:'voltage' },
+  { cat:'digital', icon:'', title:'3. Conversión ADC', tag:'analogRead(A0)', desc:'El ADC del Arduino corta ese voltaje en un número entero de 0 a 1023.', key:'adc' },
+  { cat:'digital', icon:'', title:'4. Procesamiento', tag:'map()', desc:'El código escala ese número al rango que entiende analogWrite(): 0 a 255.', key:'map' },
+  { cat:'digital', icon:'', title:'5. Generación de orden', tag:'analogWrite(9, valor)', desc:'Esa orden queda lista para salir por el pin PWM ~9.', key:'order' },
+  { cat:'traduccion', icon:'', title:'6. Transmisión de salida', tag:'Pin ~9', desc:'El pin prende y apaga muy rápido: ni 0 ni 5V fijos, un "casi analógico" por duty cycle.', key:'pwm' },
+  { cat:'fisico', icon:'💡', title:'7. Respuesta física', tag:'LED', desc:'La corriente que pasa por el LED se convierte en luz visible, más o menos intensa.', key:'led' },
+];
+
+const pipelineEl = document.getElementById('pipeline');
+stages.forEach(s=>{
+  const div = document.createElement('div');
+  div.className = 'p-step';
+  div.dataset.cat = s.cat;
+  div.innerHTML = `
+    <div class="p-num">${s.icon}</div>
+    <div class="p-card">
+      <div class="p-head">
+        <span class="p-title">${s.title}</span>
+        <span class="p-tag">${s.tag}</span>
+      </div>
+      <p class="p-desc">${s.desc}</p>
+      <div class="p-live" id="live-${s.key}"></div>
+    </div>`;
+  pipelineEl.appendChild(div);
+});
+
+const slider = document.getElementById('sunSlider');
+const sunPct = document.getElementById('sunPct');
+const sunRays = document.getElementById('sunRays');
+const sunCore = document.getElementById('sunCore');
+const ledGlow = document.getElementById('ledGlow');
+const ledRays = document.getElementById('ledRays');
+const ledFill = document.getElementById('ledFill');
+
+// build sun rays once
+const rayCount = 8;
+for(let i=0;i<rayCount;i++){
+  const ang = (i/rayCount) * Math.PI*2;
+  const x1 = Math.cos(ang)*30, y1 = Math.sin(ang)*30;
+  const x2 = Math.cos(ang)*40, y2 = Math.sin(ang)*40;
+  const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+  line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+  line.classList.add('sunray');
+  sunRays.appendChild(line);
+}
+
+function update(){
+  const intensity = Number(slider.value); // 0-100
+  sunPct.textContent = intensity + '%';
+
+  const voltage = (intensity/100) * 5;               // 0-5 V
+  const adc = Math.round((voltage/5) * 1023);         // 0-1023
+  const pwm = Math.round((adc/1023) * 255);           // 0-255
+  const ledPct = Math.round((pwm/255) * 100);         // 0-100
+
+  const bits = adc.toString(2).padStart(10,'0');
+
+  // sun visual
+  const rayLen = 6 + (intensity/100)*10;
+  const rayOp = 0.35 + (intensity/100)*0.65;
+  document.querySelectorAll('.sunray').forEach(r=>{
+    r.setAttribute('stroke-opacity', rayOp);
+  });
+  sunCore.setAttribute('fill', intensity > 50 ? '#e7b44b' : '#8a7134');
+  sunCore.setAttribute('r', 20 + (intensity/100)*6);
+
+  // diagram readouts
+  document.getElementById('dTextV').textContent = voltage.toFixed(2) + ' V';
+  document.getElementById('dTextADC').textContent = 'ADC ' + adc;
+  document.getElementById('dTextPWM').textContent = 'PWM ' + pwm;
+
+  // LED glow
+  ledGlow.setAttribute('opacity', (ledPct/100 * 0.55).toFixed(2));
+  ledRays.setAttribute('opacity', ledPct > 8 ? Math.min(1, ledPct/100 + .15).toFixed(2) : 0);
+  ledFill.setAttribute('opacity', (0.15 + (ledPct/100)*0.85).toFixed(2));
+
+  // pipeline live readouts
+  document.getElementById('live-sun').innerHTML =
+    `<span class="readout">${intensity}% de intensidad solar</span>`;
+
+  document.getElementById('live-voltage').innerHTML =
+    `${barSvg(intensity, '#cc8b9c')}<span class="readout">${voltage.toFixed(2)} V continuos</span>`;
+
+  document.getElementById('live-adc').innerHTML =
+    `${bitsHtml(bits)}<span class="readout">= ${adc} / 1023</span>`;
+
+  document.getElementById('live-map').innerHTML =
+    `<span class="readout mono">map(${adc}, 0, 1023, 0, 255) = ${pwm}</span>`;
+
+  document.getElementById('live-order').innerHTML =
+    `<span class="chip">analogWrite(9, ${pwm})</span>`;
+
+  document.getElementById('live-pwm').innerHTML =
+    `${pwmSvg(ledPct, '#cc8b9c')}<span class="readout">duty cycle ${ledPct}%</span>`;
+
+  document.getElementById('live-led').innerHTML =
+    `<span class="readout" style="color:#e7b44b">Brillo del LED: ${ledPct}%</span>`;
+}
+
+slider.addEventListener('input', update);
+update();
+</script>
+</body>
+</html>
