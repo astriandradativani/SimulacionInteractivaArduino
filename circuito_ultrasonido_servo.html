@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El viaje del dato — HC-SR04 y Servomotor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b1210;
+    --panel: #101a17;
+    --pcb: #16241e;
+    --line: #23352c;
+    --copper: #c07a45;
+    --amber: #ffb648;
+    --cyan: #5fd9d0;
+    --text: #eae6da;
+    --text-dim: #9aa89f;
+    --mono: 'JetBrains Mono', monospace;
+    --serif: 'Fraunces', serif;
+    --sans: 'Inter', sans-serif;
+    --fisico: var(--amber);
+    --fisico-soft: rgba(255,182,72,.14);
+    --traduccion: var(--copper);
+    --traduccion-soft: rgba(192,122,69,.16);
+    --digital: var(--cyan);
+    --digital-soft: rgba(95,217,208,.14);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, #10201a 0%, transparent 45%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.5;
+  }
+  svg text{ font-family: var(--mono); }
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px;}
+  /* HERO */
+  header{padding:76px 0 48px;}
+  .eyebrow-row{display:flex;align-items:center;gap:10px;color:var(--copper);font-family:var(--mono);font-size:13px;margin-bottom:22px;}
+  .eyebrow-row svg{flex:none;}
+  h1{
+    font-family:var(--serif);
+    font-optical-sizing:auto;
+    font-weight:600;
+    font-size:clamp(38px,6vw,66px);
+    line-height:1.02;
+    margin:0 0 20px;
+    max-width:14ch;
+  }
+  h1 em{font-style:italic;color:var(--amber);}
+  .lede{max-width:62ch;color:var(--text-dim);font-size:17px;}
+  .lede strong{color:var(--text);font-weight:500;}
+  /* STAGE TRACKER */
+  .tracker{
+    position:sticky;top:0;z-index:30;
+    background:rgba(11,18,16,.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    padding:14px 0;
+  }
+  .tracker-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;}
+  .tracker-row::-webkit-scrollbar{display:none;}
+  .tstep{
+    flex:1 1 0;min-width:108px;
+    background:transparent;border:1px solid var(--line);
+    border-radius:9px;
+    padding:9px 10px;
+    cursor:pointer;
+    color:var(--text-dim);
+    font-family:var(--mono);
+    font-size:12px;
+    text-align:left;
+    transition:border-color .25s, background .25s, color .25s;
+  }
+  .tstep .n{display:block;font-size:16px;margin-bottom:3px;}
+  .tstep.active{
+    border-color:var(--amber);
+    background:rgba(255,182,72,.08);
+    color:var(--amber);
+  }
+  .tstep:hover{border-color:var(--cyan);}
+  /* MAIN STAGE */
+  main{padding:52px 0 40px;}
+  .stage-grid{
+    display:grid;
+    grid-template-columns:1.15fr 1fr;
+    gap:36px;
+    align-items:start;
+  }
+  @media (max-width:860px){ .stage-grid{grid-template-columns:1fr;} }
+  .visual-panel{
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.02), transparent 30%),
+      var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:26px;
+    min-height:360px;
+    position:relative;
+    overflow:hidden;
+  }
+  .visual-panel::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size:22px 22px;
+    pointer-events:none;
+  }
+  #stageSvgHolder{position:relative;z-index:1;width:100%;height:280px;}
+  #stageSvgHolder svg{width:100%;height:100%;overflow:visible;}
+  .domain-tag{
+    display:inline-block;
+    font-family:var(--mono);
+    font-size:11.5px;
+    letter-spacing:.02em;
+    color:var(--bg);
+    background:var(--amber);
+    padding:3px 9px;
+    border-radius:5px;
+    margin-bottom:14px;
+  }
+  .stage-title{
+    font-family:var(--serif);
+    font-size:27px;
+    font-weight:600;
+    margin:0 0 10px;
+  }
+  .stage-desc{color:var(--text-dim);font-size:15.5px;max-width:52ch;}
+  .stage-desc b{color:var(--text);font-weight:600;}
+  .code-panel{
+    background:#0d1512;
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+  }
+  .code-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 16px;border-bottom:1px solid var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--text-dim);
+  }
+  .code-head span.dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);display:inline-block;margin-right:8px;}
+  pre.code{
+    margin:0;padding:18px 16px;
+    font-family:var(--mono);font-size:13px;line-height:1.65;
+    overflow-x:auto;
+    color:#a9b6ac;
+  }
+  pre.code .ln{display:block;padding:1px 8px;border-radius:4px;transition:background .3s, color .3s;white-space:pre;}
+  pre.code .ln.hl{background:rgba(255,182,72,.12);color:var(--amber);}
+  .kw{color:#7fb8ff;} .fn{color:var(--cyan);} .cm{color:#5a6a60;font-style:italic;} .num{color:#e39a5b;}
+  .nav-buttons{display:flex;justify-content:space-between;margin-top:22px;gap:12px;}
+  .nb{
+    font-family:var(--mono);font-size:13px;
+    background:transparent;border:1px solid var(--line);color:var(--text);
+    padding:10px 16px;border-radius:8px;cursor:pointer;
+    transition:border-color .2s, color .2s;
+  }
+  .nb:hover{border-color:var(--amber);color:var(--amber);}
+  .nb:disabled{opacity:.35;cursor:default;}
+  /* TABLE SECTION */
+  section.table-sec{padding:70px 0 30px;}
+  .section-head{max-width:60ch;margin-bottom:34px;}
+  .section-head h2{font-family:var(--serif);font-size:32px;font-weight:600;margin:0 0 12px;}
+  .section-head p{color:var(--text-dim);font-size:15.5px;}
+  table.journey{width:100%;border-collapse:collapse;font-size:14.5px;}
+  table.journey th{
+    text-align:left;font-family:var(--mono);font-size:11.5px;color:var(--copper);
+    padding:0 14px 12px;border-bottom:1px solid var(--line);font-weight:500;
+  }
+  table.journey td{
+    padding:16px 14px;border-bottom:1px solid var(--line);vertical-align:top;
+    color:var(--text-dim);
+  }
+  table.journey td.state{color:var(--text);font-weight:500;white-space:nowrap;}
+  table.journey tr:hover td{background:rgba(255,255,255,.02);}
+  /* GLOSARIO */
+  .glossary{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+  .g-item{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .g-item .g-term{font-family:var(--mono);color:var(--cyan);font-size:13.5px;display:block;margin-bottom:4px;}
+  .g-item p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  footer{padding:50px 0 60px;border-top:1px solid var(--line);margin-top:40px;color:var(--text-dim);font-size:13px;font-family:var(--mono);}
+  /* ---------- CIRCUITO EN VIVO ---------- */
+  .panel2{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;margin-bottom:26px;}
+  .panel2 h2{font-family:var(--serif);font-weight:600;margin:0 0 6px;font-size:26px;}
+  .panel2 .p-intro{color:var(--text-dim);font-size:15px;margin:0 0 22px;max-width:74ch;}
+  .dist-control{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:18px;}
+  .dist-control label{font-family:var(--mono);font-size:14px;white-space:nowrap;color:var(--text);}
+  .dist-control input[type=range]{flex:1;min-width:220px;height:6px;border-radius:4px;appearance:none;background:linear-gradient(90deg,var(--amber),var(--cyan));outline:none;}
+  .dist-control input[type=range]::-webkit-slider-thumb{appearance:none;width:20px;height:20px;border-radius:50%;background:var(--text);border:3px solid var(--bg);cursor:pointer;box-shadow:0 0 0 2px var(--cyan);}
+  .dist-control input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--text);border:3px solid var(--bg);cursor:pointer;}
+  .dist-control .val{font-family:var(--mono);color:var(--cyan);font-weight:600;min-width:70px;text-align:right;}
+  .play-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px;}
+  .btn-play{display:inline-flex;align-items:center;gap:8px;background:rgba(95,217,208,.12);color:var(--cyan);border:1px solid var(--cyan);border-radius:8px;padding:9px 16px;font-family:var(--mono);font-size:13px;font-weight:600;cursor:pointer;transition:transform .15s,background .15s;}
+  .btn-play:hover{background:var(--cyan);color:var(--bg);}
+  .btn-play:active{transform:scale(.97);}
+  .btn-play[disabled]{opacity:.5;cursor:default;pointer-events:none;}
+  .play-hint{color:var(--text-dim);font-size:13px;font-family:var(--sans);}
+  .diagram-svg{width:100%;height:auto;display:block;}
+  .node-highlight{opacity:0;transition:opacity .25s ease;}
+  #liveDot{filter:drop-shadow(0 0 6px currentColor);}
+  .pipeline{display:flex;flex-direction:column;gap:0;margin-top:6px;}
+  .p-step{position:relative;padding-left:56px;padding-bottom:20px;border-radius:8px;transition:background .3s ease;scroll-margin-top:90px;}
+  .p-step::before{content:"";position:absolute;left:19px;top:38px;bottom:0;width:2px;background:var(--line);}
+  .p-step:last-child::before{display:none;}
+  .p-step.active{background:rgba(255,255,255,.03);}
+  .p-num{position:absolute;left:0;top:0;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.05rem;background:var(--bg);border:2px solid var(--cat-color);transition:box-shadow .25s ease;}
+  .p-step.active .p-num{box-shadow:0 0 0 4px var(--cat-color-soft,transparent);}
+  .p-step[data-cat="fisico"]{--cat-color:var(--fisico);--cat-color-soft:rgba(255,182,72,.25);}
+  .p-step[data-cat="traduccion"]{--cat-color:var(--traduccion);--cat-color-soft:rgba(192,122,69,.3);}
+  .p-step[data-cat="digital"]{--cat-color:var(--digital);--cat-color-soft:rgba(95,217,208,.25);}
+  .p-card{background:var(--pcb);border:1px solid var(--line);border-radius:9px;padding:14px 16px;}
+  .p-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap;}
+  .p-title{font-family:var(--serif);font-size:15px;font-weight:600;}
+  .p-tag{font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--cat-color);color:var(--bg);font-family:var(--mono);}
+  .p-desc{font-size:13.5px;color:var(--text-dim);margin:0 0 8px;font-family:var(--sans);}
+  .p-arduino{font-size:12.5px;color:var(--text);background:rgba(255,255,255,.04);border-left:3px solid var(--cat-color);padding:6px 10px;border-radius:0 6px 6px 0;margin:0 0 10px;font-family:var(--sans);}
+  .p-arduino b{color:var(--cat-color);}
+  .p-live{font-family:var(--mono);font-size:13px;color:var(--cat-color);}
+  .lv-code-wrap{background:#0d1512;border:1px solid var(--line);border-radius:9px;padding:16px 0;overflow-x:auto;margin-top:4px;}
+  .lv-line{display:block;padding:2px 20px;font-family:var(--mono);font-size:13px;white-space:pre;color:#a9b6ac;border-left:3px solid transparent;transition:background .25s,border-color .25s,color .25s;}
+  .lv-line.hl-fisico{background:rgba(255,182,72,.12);border-left-color:var(--amber);color:var(--text);}
+  .lv-line.hl-traduccion{background:rgba(192,122,69,.16);border-left-color:var(--copper);color:var(--text);}
+  .lv-line.hl-digital{background:rgba(95,217,208,.12);border-left-color:var(--cyan);color:var(--text);}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 20px;}
+  .tab{background:var(--bg);border:1px solid var(--line);color:var(--text-dim);padding:9px 14px;border-radius:8px;font-family:var(--mono);font-size:12.5px;cursor:pointer;transition:.2s;}
+  .tab:hover{color:var(--text);}
+  .tab.active{background:rgba(95,217,208,.12);border-color:var(--cyan);color:var(--cyan);}
+  .alt-desc{color:var(--text-dim);font-size:14.5px;margin:0 0 4px;max-width:70ch;font-family:var(--sans);}
+  .alt-tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;margin-bottom:10px;font-family:var(--mono);}
+  .codewrap{background:#0d1512;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-top:6px;}
+  .codebar{display:flex;justify-content:space-between;padding:8px 14px;font-family:var(--mono);font-size:11.5px;color:var(--text-dim);border-bottom:1px solid var(--line);background:rgba(255,255,255,.02);}
+  .codeblock{margin:0;padding:14px 18px;font-family:var(--mono);font-size:13px;color:var(--text);white-space:pre;overflow-x:auto;line-height:1.55;}
+  .wokwi-frame{width:100%;aspect-ratio:16/10;border:1px solid var(--line);border-radius:9px;background:#0d1512;}
+  .wokwi-fallback{display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap;font-size:13.5px;color:var(--text-dim);font-family:var(--sans);}
+  .wokwi-fallback a{color:var(--cyan);text-decoration:underline;}
+  /* proceso interno del Arduino — rediseño en 3 pasos apilados */
+  .cpu-flow{margin-top:2px;}
+  .cpu-step{display:flex;align-items:center;gap:10px;}
+  .cpu-box{flex:1;border:1px solid rgba(95,217,208,.55);border-radius:7px;background:rgba(95,217,208,.06);padding:6px 10px;}
+  .cpu-box .cpu-fn{font-family:var(--mono);font-size:10.5px;color:var(--cyan);display:block;}
+  .cpu-box .cpu-val{font-family:var(--mono);font-size:9.5px;color:var(--text-dim);display:block;margin-top:1px;}
+  .cpu-arrow{color:var(--cyan);font-size:13px;flex:none;}
+  @media (max-width:640px){
+    .p-step{padding-left:46px;}
+    .p-num{width:32px;height:32px;font-size:.92rem;}
+  }
+</style>
+</head>
+<body>
+<header class="wrap">
+  <div class="eyebrow-row">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2C7 6 4 11 4 15a8 8 0 0016 0c0-4-3-9-8-13z" stroke="currentColor" stroke-width="1.4"/><path d="M8 15a4 4 0 008 0" stroke="currentColor" stroke-width="1.4"/></svg>
+    Sensor HC-SR04 + Servomotor SG-90
+  </div>
+  <h1>El viaje del <em>dato</em></h1>
+  <p class="lede">Una onda de sonido inaudible se convierte, en menos de <strong>20 milisegundos</strong>, en el giro preciso de un eje mecánico. Seguí a la "pelotita que muta" en sus ocho transformaciones — del aire a los engranajes.</p>
+</header>
+<div class="wrap">
+  <div class="panel2">
+    <h2>El circuito en vivo</h2>
+    <p class="p-intro">Movés la distancia del objeto y toda la cadena reacciona: cambia el tiempo de eco, el número que calcula <code>pulseIn()</code>, el ángulo que arma <code>map()</code> y, al final, la posición real del servomotor. Tocá "reproducir" para ver <b>al mismo dato</b> viajar primero como una onda que rebota, después como electricidad, después como número, y por último como movimiento.</p>
+    <div class="dist-control">
+      <label for="distSlider">📏 Distancia al objeto</label>
+      <input type="range" id="distSlider" min="2" max="300" value="20">
+      <span class="val" id="distVal">20 cm</span>
+    </div>
+    <div class="play-row">
+      <button class="btn-play" id="livePlayBtn">▶ Ver cómo viaja el dato</button>
+      <span class="play-hint">Un punto de luz recorre el circuito: Trig → onda → objeto → eco → Arduino → cálculo → pin 6 → servo. Cada parada enciende el paso y la línea de código que corresponde.</span>
+    </div>
+    <svg id="liveSvg" class="diagram-svg" viewBox="0 0 940 320" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="lvArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#ffb648"/>
+        </marker>
+      </defs>
+      <!-- HC-SR04 module -->
+      <rect x="36" y="96" width="76" height="70" rx="7" fill="#16241e" stroke="#c07a45" stroke-width="1.5"/>
+      <circle id="lvTx" cx="60" cy="118" r="10" fill="#0d1512" stroke="#ffb648" stroke-width="2"/>
+      <circle id="lvRx" cx="60" cy="148" r="10" fill="#0d1512" stroke="#5fd9d0" stroke-width="2"/>
+      <text x="74" y="121" font-size="9.5" fill="#a9b6ac">TX</text>
+      <text x="74" y="151" font-size="9.5" fill="#a9b6ac">RX</text>
+      <text x="40" y="185" font-size="11" fill="#9aa89f">HC-SR04</text>
+      <!-- wave paths (ida y vuelta) -->
+      <path id="lvWaveOut" d="M75,118 Q140,95 210,118" fill="none" stroke="#ffb648" stroke-width="2.2" stroke-dasharray="6 6" marker-end="url(#lvArrow)"/>
+      <path id="lvWaveBack" d="M210,148 Q140,171 75,148" fill="none" stroke="#5fd9d0" stroke-width="2.2" stroke-dasharray="6 6" marker-end="url(#lvArrow)"/>
+      <!-- objeto -->
+      <g id="lvObjectGroup">
+        <rect id="lvObject" x="210" y="118" width="30" height="30" rx="4" fill="#213a2c" stroke="#eae6da" stroke-width="1.5"/>
+        <text id="lvObjectLbl" x="225" y="165" font-size="10.5" text-anchor="middle" fill="#9aa89f">objeto</text>
+      </g>
+      <!-- wires to Arduino -->
+      <line x1="112" y1="118" x2="430" y2="100" stroke="#ffb648" stroke-opacity=".5" stroke-width="1.6"/>
+      <line x1="112" y1="148" x2="430" y2="228" stroke="#5fd9d0" stroke-opacity=".5" stroke-width="1.6"/>
+      <!-- Arduino box -->
+      <rect x="430" y="64" width="270" height="180" rx="8" fill="#16241e" stroke="#5fd9d0" stroke-width="1.5"/>
+      <text x="565" y="86" font-size="14" fill="#eae6da" text-anchor="middle" font-weight="600">ARDUINO UNO</text>
+      <text x="440" y="104" font-size="10.5" fill="#ffb648">11 Trig</text>
+      <text x="440" y="232" font-size="10.5" fill="#5fd9d0">10 Echo</text>
+      <text x="692" y="104" font-size="10.5" fill="#c07a45" text-anchor="end">~6</text>
+      <!-- proceso interno: 3 pasos apilados en vertical, cada uno con su función y su valor -->
+      <rect id="lvBoxPulse" x="450" y="128" width="230" height="24" rx="6" fill="none" stroke="#5fd9d0" stroke-opacity=".55" stroke-width="1.3" stroke-dasharray="3 3"/>
+      <text x="460" y="144" font-size="9.5" fill="#5fd9d0">pulseIn() → duración</text>
+      <path d="M565,152 L565,159" stroke="#5fd9d0" stroke-width="1.3" marker-end="url(#lvArrow2)"/>
+      <rect id="lvBoxDist" x="450" y="161" width="230" height="24" rx="6" fill="none" stroke="#5fd9d0" stroke-opacity=".55" stroke-width="1.3" stroke-dasharray="3 3"/>
+      <text x="460" y="177" font-size="9.5" fill="#5fd9d0">distancia = duración / 58</text>
+      <path d="M565,185 L565,192" stroke="#5fd9d0" stroke-width="1.3" marker-end="url(#lvArrow2)"/>
+      <rect id="lvBoxMap" x="450" y="194" width="230" height="24" rx="6" fill="none" stroke="#5fd9d0" stroke-opacity=".55" stroke-width="1.3" stroke-dasharray="3 3"/>
+      <text x="460" y="210" font-size="9.5" fill="#5fd9d0">map() → ángulo</text>
+      <defs>
+        <marker id="lvArrow2" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M0,0 L8,4 L0,8 z" fill="#5fd9d0"/>
+        </marker>
+      </defs>
+      <!-- pin6 to servo -->
+      <line x1="700" y1="100" x2="730" y2="145" stroke="#c07a45" stroke-width="2.2"/>
+      <!-- Servo -->
+      <rect x="730" y="108" width="110" height="74" rx="8" fill="#16241e" stroke="#c07a45" stroke-width="1.5"/>
+      <circle cx="785" cy="145" r="13" fill="#0d1512" stroke="#5fd9d0" stroke-width="2"/>
+      <path d="M725 78 A85 85 0 0 1 845 78" fill="none" stroke="#23352c" stroke-width="2"/>
+      <g id="lvNeedle">
+        <line x1="785" y1="145" x2="785" y2="80" stroke="#ffb648" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="785" cy="145" r="4" fill="#ffb648"/>
+      </g>
+      <text x="785" y="200" font-size="11" text-anchor="middle" fill="#9aa89f">SG-90</text>
+      <!-- live readouts -->
+      <text id="lvTextDur" x="150" y="222" font-size="11.5" fill="#5fd9d0">0 µs</text>
+      <text id="lvTextDist" x="565" y="256" font-size="11.5" fill="#eae6da" text-anchor="middle">0 cm</text>
+      <text id="lvTextAngle" x="785" y="225" font-size="11.5" fill="#ffb648" text-anchor="middle">0°</text>
+      <!-- halos -->
+      <circle id="haloTx" class="node-highlight" cx="60" cy="118" r="16" fill="none" stroke="#ffb648" stroke-width="2.5"/>
+      <circle id="haloWaveOut" class="node-highlight" cx="140" cy="105" r="12" fill="none" stroke="#ffb648" stroke-width="2.5"/>
+      <rect id="haloObject" class="node-highlight" x="205" y="113" width="40" height="40" rx="8" fill="none" stroke="#ffb648" stroke-width="2.5"/>
+      <circle id="haloRx" class="node-highlight" cx="60" cy="148" r="16" fill="none" stroke="#5fd9d0" stroke-width="2.5"/>
+      <rect id="haloEcho" class="node-highlight" x="424" y="216" width="72" height="24" rx="6" fill="none" stroke="#5fd9d0" stroke-width="2.5"/>
+      <rect id="haloPulse" class="node-highlight" x="446" y="124" width="238" height="32" rx="8" fill="none" stroke="#5fd9d0" stroke-width="2.5"/>
+      <rect id="haloCpu" class="node-highlight" x="446" y="124" width="238" height="98" rx="8" fill="none" stroke="#5fd9d0" stroke-width="2.5"/>
+      <circle id="haloPin6" class="node-highlight" cx="700" cy="100" r="14" fill="none" stroke="#c07a45" stroke-width="2.5"/>
+      <circle id="haloServo" class="node-highlight" cx="785" cy="145" r="34" fill="none" stroke="#ffb648" stroke-width="2.5"/>
+      <!-- el dato viajando -->
+      <circle id="liveDot" cx="60" cy="118" r="7" fill="#eae6da" opacity="0"/>
+    </svg>
+    <p class="p-intro" style="margin-top:14px;margin-bottom:0;">El Trigger dispara la onda → rebota en el objeto → el eco vuelve y mantiene el pin Echo en HIGH → <code>pulseIn()</code> mide ese tiempo → la CPU calcula distancia y la traduce a ángulo con <code>map()</code> → el pin 6 manda el pulso PWM → el servo gira su eje.</p>
+  </div>
+  <div class="panel2">
+    <h2>La ruta del dato, paso a paso</h2>
+    <p class="p-intro">Las mismas ocho etapas del recorrido, pero mostrando qué ocurre en el circuito y <b>qué instrucción de Arduino</b> interviene. Movés la distancia arriba y cada valor de acá abajo se recalcula al instante; tocá "▶ Ver cómo viaja el dato" para que se vaya iluminando paso por paso.</p>
+    <div class="pipeline" id="livePipeline"></div>
+  </div>
+  <div class="panel2">
+    <h2 style="font-size:22px;">El código que hace todo esto</h2>
+    <p class="p-intro">El sketch completo. Cuando reproducís el viaje del dato, la línea que se está ejecutando se ilumina acá.</p>
+    <div class="lv-code-wrap"><pre id="liveCodeBlock" style="margin:0;"></pre></div>
+  </div>
+</div>
+<nav class="tracker">
+  <div class="wrap">
+    <div class="tracker-row" id="trackerRow"></div>
+  </div>
+</nav>
+<main class="wrap">
+  <div class="stage-grid">
+    <div class="visual-panel">
+      <span class="domain-tag" id="domainTag"></span>
+      <div id="stageSvgHolder"></div>
+    </div>
+    <div>
+      <h2 class="stage-title" id="stageTitle"></h2>
+      <p class="stage-desc" id="stageDesc"></p>
+      <div class="code-panel" style="margin-top:22px;">
+        <div class="code-head"><span><span class="dot"></span>sketch.ino</span><span id="codeLabel"></span></div>
+        <pre class="code" id="codeBlock"></pre>
+      </div>
+    </div>
+  </div>
+  <div class="nav-buttons">
+    <button class="nb" id="prevBtn">← Etapa anterior</button>
+    <button class="nb" id="nextBtn">Etapa siguiente →</button>
+  </div>
+</main>
+<div class="wrap">
+  <div class="panel2">
+    <h2 style="font-size:22px;">Alternativas a map(): de lo simple a lo complejo</h2>
+    <p class="p-intro">Arriba usamos <code>map(distancia, 5, 50, 0, 180)</code>. Estas seis formas muestran la misma traducción de rango escrita a mano, de lo más fácil de explicar en clase a lo más prolijo frente a un sensor real.</p>
+    <div class="tabs" id="altTabs"></div>
+    <div id="altContent"></div>
+  </div>
+  <div class="panel2">
+    <h2 style="font-size:22px;">Probalo en Wokwi</h2>
+    <p class="p-intro">Esta es la simulación real, con el código completo, para armar el circuito y correrlo paso a paso.</p>
+    <iframe class="wokwi-frame" src="https://wokwi.com/projects/473922878222780417" title="Simulación Wokwi: HC-SR04 y Servomotor con Arduino UNO" loading="lazy"></iframe>
+    <div class="wokwi-fallback">
+      <span>¿No carga el recuadro de arriba?</span>
+      <a href="https://wokwi.com/projects/473922878222780417" target="_blank" rel="noopener">Abrir el proyecto en Wokwi en una pestaña nueva ↗</a>
+    </div>
+  </div>
+</div>
+<section class="table-sec wrap">
+  <div class="section-head">
+    <h2>De la onda acústica al engranaje mecánico</h2>
+    <p>Cada fila es un estado distinto de la misma "pelotita": el dato conserva su identidad — representa la distancia al objeto — pero cambia por completo de forma física.</p>
+  </div>
+  <div style="overflow-x:auto;">
+  <table class="journey">
+    <thead><tr><th>Estado</th><th>Etapa en el circuito</th><th>Dominio</th><th>Qué ocurre con el dato</th></tr></thead>
+    <tbody>
+      <tr><td class="state">🦇 Onda acústica</td><td>Aire / cápsulas HC-SR04</td><td>Físico</td><td>El emisor dispara 8 ráfagas de ultrasonido (40 kHz) que rebotan en el objeto y regresan.</td></tr>
+      <tr><td class="state">⏱️ Ancho de pulso eléctrico</td><td>Pin Echo (pin 10)</td><td>Eléctrico / temporal</td><td>El pin Echo se mantiene en HIGH exactamente el tiempo que la onda tarda en ir y volver.</td></tr>
+      <tr><td class="state">🔢 Tiempo en microsegundos</td><td>CPU / pulseIn()</td><td>Digital (long)</td><td>pulseIn() mide la duración del pulso HIGH y la convierte en un entero que representa microsegundos.</td></tr>
+      <tr><td class="state">📐 Distancia y ángulo</td><td>CPU / fórmula y map()</td><td>Digital (lógica)</td><td>La CPU calcula distancia = duracion / 58.0 y reescala el rango 2–400 cm a grados (0° a 180°) con map().</td></tr>
+      <tr><td class="state">⚡ Tren de pulsos PWM</td><td>Pin 6 / librería Servo.h</td><td>Modulación (PWM)</td><td>La CPU emite un tren de pulsos a 50 Hz con anchos de 1.0 ms (0°) a 2.0 ms (180°).</td></tr>
+      <tr><td class="state">⚙️ Posición mecánica</td><td>Eje del servomotor SG-90</td><td>Físico / mecánico</td><td>El circuito interno del servo compara el pulso con su potenciómetro y mueve los engranajes hasta fijar la aguja.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+<section class="table-sec wrap">
+  <div class="section-head">
+    <h2>Glosario rápido</h2>
+    <p>Los términos técnicos que vas a necesitar para hablar de este circuito con propiedad.</p>
+  </div>
+  <div class="glossary" id="glossary"></div>
+</section>
+<footer class="wrap">
+  El viaje del dato — una misma pelotita, ocho estados, hasta mover el servomotor.<br>Esp. Ing. Astri Edith Andrada Tivani
+  <p style="margin:16px 0 0;padding-top:16px;border-top:1px solid var(--line);font-size:12px;">
+    Este material está bajo una licencia <strong>Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional (CC BY-NC-SA 4.0)</strong>.
+    Sos libre de compartir y adaptar este material, siempre que:
+    <br>— Des crédito a la autora: Esp. Ing. Astri Edith Andrada Tivani
+    <br>— No le des un uso comercial
+    <br>— Distribuyas cualquier adaptación bajo esta misma licencia
+    <br>Texto legal completo: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.es" style="color:var(--cyan);">https://creativecommons.org/licenses/by-nc-sa/4.0/deed.es</a>
+  </p>
+</footer>
+<script>
+const stages = [
+  {
+    domain:"Físico",
+    title:"Onda acústica",
+    desc:"El pin <b>Trigger (11)</b> recibe un pulso HIGH de 10 µs. Esto activa el emisor del HC-SR04, que dispara <b>8 ráfagas de ultrasonido a 40 kHz</b> hacia el objeto. La pelotita nace como una onda de presión, inaudible para el oído humano.",
+    codeLabel:"setup() → disparo",
+    code:[
+      {t:"digitalWrite(PIN_TRIG, LOW);", hl:false},
+      {t:"delayMicroseconds(2); <span class='cm'>// pulso limpio</span>", hl:false},
+      {t:"digitalWrite(PIN_TRIG, HIGH);", hl:true},
+      {t:"delayMicroseconds(10); <span class='cm'>// 8 ráfagas de 40kHz</span>", hl:true},
+      {t:"digitalWrite(PIN_TRIG, LOW);", hl:false},
+    ],
+    svg:`<svg viewBox="0 0 400 260"><g id="capsules">
+      <rect x="40" y="110" width="40" height="40" rx="6" fill="#1d3b2a" stroke="#c07a45" stroke-width="1.5"/>
+      <circle cx="60" cy="130" r="9" fill="#0d1512" stroke="#5fd9d0" stroke-width="2"/>
+      <rect x="40" y="160" width="40" height="0" fill="none"/>
+      <text x="60" y="168" text-anchor="middle" font-size="10" fill="#9aa89f">TX</text>
+      </g>
+      <g stroke="#ffb648" stroke-width="2" fill="none" opacity="0.9">
+        <path id="wave1" d="M75 130 Q120 100 165 130 Q210 160 255 130" stroke-dasharray="6 6"/>
+        <path id="wave2" d="M75 130 Q130 90 185 130 Q240 170 295 130" stroke-dasharray="6 6" opacity="0.5"/>
+      </g>
+      <rect x="300" y="90" width="16" height="90" rx="4" fill="#16241e" stroke="#23352c"/>
+      <text x="308" y="200" text-anchor="middle" font-size="10" fill="#9aa89f">objeto</text>
+      <animateTransform xlink:href="#wave1" attributeName="transform" type="translate" values="0 0;40 0;0 0" dur="1.6s" repeatCount="indefinite"/>
+      <animateTransform xlink:href="#wave2" attributeName="transform" type="translate" values="0 0;40 0;0 0" dur="1.6s" begin="0.3s" repeatCount="indefinite"/>
+    </svg>`
+  },
+  {
+    domain:"Eléctrico / temporal",
+    title:"Ancho de pulso eléctrico",
+    desc:"Apenas emite el sonido, el pin <b>Echo (10)</b> sube a HIGH: el cronómetro interno arranca. Cuando el eco regresa, Echo cae a LOW. La pelotita ahora es literalmente la <b>duración de un estado eléctrico</b>, no todavía un número.",
+    codeLabel:"loop() → espera de eco",
+    code:[
+      {t:"<span class='cm'>// pinMode(PIN_ECHO, INPUT);</span>", hl:false},
+      {t:"<span class='cm'>// Echo pasa a HIGH al emitir...</span>", hl:true},
+      {t:"<span class='cm'>// ...y a LOW al recibir el eco</span>", hl:true},
+      {t:"duracion = pulseIn(PIN_ECHO, HIGH);", hl:false},
+    ],
+    svg:`<svg viewBox="0 0 400 260">
+      <line x1="30" y1="200" x2="370" y2="200" stroke="#23352c"/>
+      <path d="M30 200 L30 100 L 210 100 L 210 200 L 370 200" fill="none" stroke="#5fd9d0" stroke-width="2.5"/>
+      <text x="120" y="80" text-anchor="middle" font-size="12" fill="#5fd9d0">HIGH</text>
+      <rect x="30" y="100" width="180" height="100" fill="#5fd9d0" opacity="0.08"/>
+      <line x1="30" y1="215" x2="210" y2="215" stroke="#ffb648" stroke-width="2"/>
+      <text x="120" y="232" text-anchor="middle" font-size="11" fill="#ffb648">t = duración (µs)</text>
+      <circle cx="30" cy="100" r="4" fill="#ffb648"/>
+      <circle cx="210" cy="100" r="4" fill="#ffb648"/>
+    </svg>`
+  },
+  {
+    domain:"Digital (long)",
+    title:"Tiempo en microsegundos",
+    desc:"<b>pulseIn()</b> traduce ese pulso eléctrico a un número entero: microsegundos transcurridos en el viaje completo (ida y vuelta). La pelotita deja el mundo eléctrico y entra al mundo puramente digital, como una variable <b>long</b>.",
+    codeLabel:"conversión a número",
+    code:[
+      {t:"<span class='kw'>long</span> duracion;", hl:false},
+      {t:"duracion = <span class='fn'>pulseIn</span>(PIN_ECHO, HIGH);", hl:true},
+      {t:"<span class='cm'>// duracion ≈ 1200 µs, por ejemplo</span>", hl:true},
+    ],
+    svg:`<svg viewBox="0 0 400 260">
+      <rect x="130" y="90" width="140" height="80" rx="10" fill="#101a17" stroke="#5fd9d0" stroke-width="1.5"/>
+      <text x="200" y="125" text-anchor="middle" font-size="22" fill="#ffb648" font-weight="700">1204</text>
+      <text x="200" y="148" text-anchor="middle" font-size="11" fill="#9aa89f">microsegundos (long)</text>
+      <text x="200" y="60" text-anchor="middle" font-size="11" fill="#5fd9d0">pulseIn(PIN_ECHO, HIGH)</text>
+      <path d="M200 68 L200 88" stroke="#5fd9d0" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#5fd9d0"/></marker></defs>
+    </svg>`
+  },
+  {
+    domain:"Digital (lógica)",
+    title:"Distancia y ángulo",
+    desc:"La CPU aplica <b>distancia = duracion / 58.0</b> para obtener centímetros, y luego <b>map()</b> reescala linealmente ese rango (2–400 cm) a grados (0°–180°). La pelotita se abstrae dos veces: de tiempo a espacio, y de espacio a rotación.",
+    codeLabel:"cálculo y map()",
+    code:[
+      {t:"distancia = duracion / <span class='num'>58.0</span>;", hl:true},
+      {t:"angulo = <span class='fn'>map</span>((<span class='kw'>int</span>)distancia, <span class='num'>2</span>, <span class='num'>400</span>, <span class='num'>0</span>, <span class='num'>180</span>);", hl:true},
+    ],
+    svg:`<svg viewBox="0 0 400 260">
+      <text x="100" y="60" text-anchor="middle" font-size="11" fill="#9aa89f">regla (2–400 cm)</text>
+      <line x1="30" y1="80" x2="170" y2="80" stroke="#c07a45" stroke-width="2"/>
+      <g stroke="#c07a45">
+        <line x1="30" y1="74" x2="30" y2="86"/><line x1="70" y1="74" x2="70" y2="86"/>
+        <line x1="110" y1="74" x2="110" y2="86"/><line x1="170" y1="74" x2="170" y2="86"/>
+      </g>
+      <circle cx="90" cy="80" r="6" fill="#ffb648"/>
+      <path d="M170 80 L230 80" stroke="#5fd9d0" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow2)"/>
+      <defs><marker id="arrow2" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#5fd9d0"/></marker></defs>
+      <text x="200" y="70" text-anchor="middle" font-size="10" fill="#5fd9d0">map()</text>
+      <text x="310" y="60" text-anchor="middle" font-size="11" fill="#9aa89f">transportador (°)</text>
+      <path d="M260 140 A70 70 0 0 1 400 140" fill="none" stroke="#c07a45" stroke-width="2"/>
+      <line x1="330" y1="140" x2="380" y2="90" stroke="#ffb648" stroke-width="3"/>
+      <circle cx="330" cy="140" r="4" fill="#ffb648"/>
+      <text x="330" y="165" text-anchor="middle" font-size="10" fill="#9aa89f">54°</text>
+    </svg>`
+  },
+  {
+    domain:"Modulación PWM",
+    title:"Tren de pulsos PWM",
+    desc:"La librería <b>Servo.h</b> convierte el ángulo en una señal periódica a <b>50 Hz</b> (cada 20 ms). El ancho del pulso HIGH —entre 1.0 y 2.0 ms— codifica la posición. La pelotita ahora es una forma de onda cuadrada viajando por el cable de señal.",
+    codeLabel:"salida al servo",
+    code:[
+      {t:"Servo miServo;", hl:false},
+      {t:"miServo.<span class='fn'>attach</span>(PIN_SERVO); <span class='cm'>// pin 6</span>", hl:false},
+      {t:"miServo.<span class='fn'>write</span>(angulo);", hl:true},
+      {t:"<span class='cm'>// 50 Hz, pulso 1.0–2.0 ms</span>", hl:true},
+    ],
+    svg:`<svg viewBox="0 0 400 260">
+      <line x1="20" y1="180" x2="390" y2="180" stroke="#23352c"/>
+      <g fill="none" stroke="#ffb648" stroke-width="2.5">
+        <path d="M20 180 L20 110 L60 110 L60 180 L150 180 L150 110 L190 110 L190 180 L280 180 L280 110 L320 110 L320 180 L370 180"/>
+      </g>
+      <text x="40" y="95" text-anchor="middle" font-size="10" fill="#ffb648">1–2ms</text>
+      <path d="M60 200 L150 200" stroke="#5fd9d0" stroke-width="1.5"/>
+      <text x="105" y="216" text-anchor="middle" font-size="10" fill="#5fd9d0">período 20ms (50Hz)</text>
+    </svg>`
+  },
+  {
+    domain:"Físico / mecánico",
+    title:"Posición mecánica",
+    desc:"El circuito interno del servo compara el ancho del pulso con la lectura de su <b>potenciómetro</b>, activa el motor DC y mueve el tren de engranajes hasta fijar el eje en el ángulo exacto. La pelotita termina su viaje como <b>desplazamiento físico</b> de una aguja.",
+    codeLabel:"resultado físico",
+    code:[
+      {t:"<span class='cm'>// el servo ya recibió el pulso...</span>", hl:false},
+      {t:"<span class='cm'>// ...y giró su eje al ángulo pedido</span>", hl:true},
+      {t:"delay(<span class='num'>100</span>); <span class='cm'>// pausa anti-eco</span>", hl:false},
+    ],
+    svg:`<svg viewBox="0 0 400 260">
+      <rect x="150" y="140" width="100" height="70" rx="8" fill="#16241e" stroke="#c07a45" stroke-width="1.5"/>
+      <circle cx="200" cy="140" r="14" fill="#0d1512" stroke="#5fd9d0" stroke-width="2"/>
+      <g id="needle">
+        <line x1="200" y1="140" x2="200" y2="70" stroke="#ffb648" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="200" cy="140" r="4" fill="#ffb648"/>
+      </g>
+      <path d="M140 75 A85 85 0 0 1 260 75" fill="none" stroke="#23352c" stroke-width="2"/>
+      <animateTransform xlink:href="#needle" attributeName="transform" type="rotate" values="-70 200 140; 70 200 140; -70 200 140" dur="2.4s" repeatCount="indefinite"/>
+      <text x="200" y="230" text-anchor="middle" font-size="11" fill="#9aa89f">SG-90</text>
+    </svg>`
+  },
+];
+let current = 0;
+const trackerRow = document.getElementById('trackerRow');
+const icons = ["🦇","⏱️","🔢","📐","⚡","⚙️"];
+stages.forEach((s,i)=>{
+  const btn = document.createElement('button');
+  btn.className = 'tstep';
+  btn.innerHTML = `<span class="n">${icons[i]}</span>${s.title}`;
+  btn.onclick = ()=>render(i);
+  trackerRow.appendChild(btn);
+});
+function render(i){
+  current = i;
+  const s = stages[i];
+  document.querySelectorAll('.tstep').forEach((b,idx)=>b.classList.toggle('active', idx===i));
+  document.getElementById('domainTag').textContent = s.domain;
+  document.getElementById('stageTitle').textContent = s.title;
+  document.getElementById('stageDesc').innerHTML = s.desc;
+  document.getElementById('codeLabel').textContent = s.codeLabel;
+  document.getElementById('stageSvgHolder').innerHTML = s.svg;
+  document.getElementById('codeBlock').innerHTML = s.code.map(l=>`<span class="ln${l.hl?' hl':''}">${l.t}</span>`).join('\n');
+  document.getElementById('prevBtn').disabled = i===0;
+  document.getElementById('nextBtn').disabled = i===stages.length-1;
+}
+document.getElementById('prevBtn').onclick = ()=>{ if(current>0) render(current-1); };
+document.getElementById('nextBtn').onclick = ()=>{ if(current<stages.length-1) render(current+1); };
+render(0);
+// ================== CIRCUITO EN VIVO ==================
+(function(){
+  const DMIN = 2, DMAX = 400; // rango real del sensor / del map()
+  const ARDUINO_X = 430; // el objeto nunca debe cruzar esta línea
+  const objMinX = 165, objMaxX = 380; // recorrido visual del objeto, siempre con margen antes del Arduino
+  const liveStages = [
+    { cat:'fisico', icon:'🔊', title:'1. Emisión del pulso', tag:'digitalWrite(PIN_TRIG, HIGH)', key:'trig',
+      desc:'Arduino pone el pin Trigger en HIGH durante 10 µs. El HC-SR04 responde disparando 8 ráfagas de ultrasonido a 40 kHz: nace la onda.',
+      arduino:'<b>digitalWrite(PIN_TRIG, HIGH)</b> seguido de <b>delayMicroseconds(10)</b> son los que arrancan físicamente el sonido.',
+      dot:{x:60,y:118}, halo:'haloTx', code:'l-trig' },
+    { cat:'fisico', icon:'〰️', title:'2. La onda viaja (ida)', tag:'aire, sin código', key:'ida',
+      desc:'La onda se propaga por el aire a ~343 m/s hacia el objeto. Todavía no hay ningún número: es pura presión sonora viajando.',
+      arduino:'Este paso <b>no tiene línea de código</b>: Arduino ya disparó el pulso y ahora solo espera.',
+      dot:{x:140,y:105}, halo:'haloWaveOut', code:null },
+    { cat:'fisico', icon:'📦', title:'3. Rebote en el objeto', tag:'reflexión acústica', key:'rebote',
+      desc:'Al chocar contra el objeto, la onda rebota y empieza el camino de vuelta hacia la cápsula receptora (RX).',
+      arduino:'Tampoco hay código acá: es física pura, la razón por la que el sensor necesita una superficie que refleje el sonido.',
+      dot:{x:225,y:133}, halo:'haloObject', code:null },
+    { cat:'traduccion', icon:'📡', title:'4. Recepción del eco', tag:'pin Echo (10) en HIGH', key:'echo',
+      desc:'El eco llega a la cápsula RX. Mientras la onda estuvo "en el aire", el pin Echo se mantuvo en HIGH: el dato ahora es la duración de un estado eléctrico.',
+      arduino:'El pin <b>Echo</b> pasa de HIGH a LOW justo cuando detecta el eco. Ese ancho de pulso es lo que se va a medir en el próximo paso.',
+      dot:{x:60,y:148}, halo:'haloRx', code:null },
+    { cat:'digital', icon:'⏱️', title:'5. Medición con pulseIn()', tag:'duracion = pulseIn(PIN_ECHO, HIGH, 30000)', key:'pulsein',
+      desc:'pulseIn() cronometra cuánto tiempo estuvo Echo en HIGH y devuelve ese tiempo en microsegundos, guardado en una variable long.',
+      arduino:'<b>pulseIn(PIN_ECHO, HIGH, 30000)</b> bloquea el programa hasta medir el pulso completo; el tercer argumento es un tiempo máximo de espera (30 ms) para no colgarse si no llega eco.',
+      dot:{x:565,y:140}, halo:'haloPulse', code:'l-pulsein' },
+    { cat:'digital', icon:'📐', title:'6. Distancia y map() a ángulo', tag:'map(distancia, 2, 400, 0, 180)', key:'map',
+      desc:'La CPU convierte el tiempo en centímetros con distancia = duracion / 58.0, y reescala ese rango (2–400 cm, el rango real del HC-SR04) al rango de ángulos del servo (0°–180°).',
+      arduino:'<b>map()</b> hace la regla de tres. Como <code>distancia</code> es <b>float</b> y map() trabaja con enteros, se la convierte con <code>(int)distancia</code> antes de pasarla.',
+      dot:{x:565,y:206}, halo:'haloCpu', code:'l-map' },
+    { cat:'traduccion', icon:'⚡', title:'7. Señal PWM al servo', tag:'miServo.write(angulo)', key:'pwm',
+      desc:'La librería Servo.h traduce el ángulo en un pulso de 1.0 a 2.0 ms, repetido cada 20 ms (50 Hz), que sale por el pin 6.',
+      arduino:'<b>miServo.write(angulo)</b> arma ese tren de pulsos por dentro: no hace falta escribirlo a mano.',
+      dot:{x:660,y:112}, halo:'haloPin6', code:'l-servo' },
+    { cat:'fisico', icon:'⚙️', title:'8. Movimiento mecánico',  tag:'eje del SG-90', key:'servo',
+      desc:'El servo compara el pulso con su potenciómetro interno, mueve el motor y los engranajes hasta fijar el eje en el ángulo pedido. El dato termina como movimiento real.',
+      arduino:'El <b>loop()</b> vuelve a empezar desde <b>digitalWrite(PIN_TRIG, LOW)</b> y todo el recorrido se repite, muchas veces por segundo.',
+      dot:{x:765,y:145}, halo:'haloServo', code:null },
+  ];
+  const pipelineEl = document.getElementById('livePipeline');
+  liveStages.forEach(s=>{
+    const div = document.createElement('div');
+    div.className = 'p-step';
+    div.id = 'lvstep-' + s.key;
+    div.dataset.cat = s.cat;
+    div.innerHTML = `
+      <div class="p-num">${s.icon}</div>
+      <div class="p-card">
+        <div class="p-head">
+          <span class="p-title">${s.title}</span>
+          <span class="p-tag">${s.tag}</span>
+        </div>
+        <p class="p-desc">${s.desc}</p>
+        <p class="p-arduino">💻 ${s.arduino}</p>
+        <div class="p-live" id="lvlive-${s.key}"></div>
+      </div>`;
+    pipelineEl.appendChild(div);
+  });
+  // ---------- Código Arduino con líneas identificadas ----------
+  const liveCodeLines = [
+    { id:null, html:`<span class="kw">#include</span> &lt;Servo.h&gt;  <span class="cm">// Librería requerida para controlar el servomotor</span>` },
+    { id:null, html:`` },
+    { id:null, html:`<span class="cm">// SENSOR: 2 cm ────────────────────► 400 cm</span>` },
+    { id:null, html:`<span class="cm">//                    ↓ map()</span>` },
+    { id:null, html:`<span class="cm">// SERVO:  0° ────────────────────► 180°</span>` },
+    { id:null, html:`` },
+    { id:null, html:`<span class="kw">const int</span> PIN_TRIG = <span class="num">11</span>;   <span class="cm">// envía el pulso ultrasónico → SALIDA</span>` },
+    { id:null, html:`<span class="kw">const int</span> PIN_ECHO = <span class="num">10</span>;   <span class="cm">// recibe el eco → ENTRADA</span>` },
+    { id:null, html:`<span class="kw">const int</span> PIN_SERVO = <span class="num">6</span>;   <span class="cm">// controla el servomotor</span>` },
+    { id:null, html:`` },
+    { id:null, html:`Servo miServo;` },
+    { id:null, html:`` },
+    { id:'l-setup', html:`<span class="kw">void</span> <span class="fn">setup</span>() {` },
+    { id:'l-setup', html:`  pinMode(PIN_TRIG, OUTPUT);` },
+    { id:'l-setup', html:`  pinMode(PIN_ECHO, INPUT);` },
+    { id:'l-setup', html:`  miServo.<span class="fn">attach</span>(PIN_SERVO);` },
+    { id:'l-setup', html:`  Serial.<span class="fn">begin</span>(<span class="num">9600</span>);` },
+    { id:'l-setup', html:`  miServo.<span class="fn">write</span>(<span class="num">0</span>);  <span class="cm">// arranca en 0°</span>` },
+    { id:'l-setup', html:`}` },
+    { id:null, html:`` },
+    { id:'l-loop', html:`<span class="kw">void</span> <span class="fn">loop</span>() {` },
+    { id:'l-trig', html:`  <span class="cm">// PASO 1: enviar el pulso ultrasónico</span>` },
+    { id:'l-trig', html:`  digitalWrite(PIN_TRIG, LOW);` },
+    { id:'l-trig', html:`  delayMicroseconds(<span class="num">2</span>);` },
+    { id:'l-trig', html:`  digitalWrite(PIN_TRIG, HIGH);` },
+    { id:'l-trig', html:`  delayMicroseconds(<span class="num">10</span>);` },
+    { id:'l-trig', html:`  digitalWrite(PIN_TRIG, LOW);` },
+    { id:null, html:`` },
+    { id:'l-pulsein', html:`  <span class="cm">// PASO 2: medir el tiempo del eco (µs)</span>` },
+    { id:'l-pulsein', html:`  <span class="kw">long</span> duracion = pulseIn(PIN_ECHO, HIGH, <span class="num">30000</span>);` },
+    { id:null, html:`` },
+    { id:'l-map', html:`  <span class="cm">// PASO 3: convertir el tiempo en distancia (cm)</span>` },
+    { id:'l-map', html:`  <span class="kw">float</span> distancia = duracion / <span class="num">58.0</span>;` },
+    { id:'l-map', html:`` },
+    { id:'l-map', html:`  <span class="cm">// PASO 4: convertir distancia en ángulo</span>` },
+    { id:'l-map', html:`  <span class="kw">int</span> angulo = map((<span class="kw">int</span>)distancia, <span class="num">2</span>, <span class="num">400</span>, <span class="num">0</span>, <span class="num">180</span>);` },
+    { id:null, html:`` },
+    { id:'l-servo', html:`  <span class="cm">// PASO 5: mover el servomotor</span>` },
+    { id:'l-servo', html:`  miServo.<span class="fn">write</span>(angulo);` },
+    { id:null, html:`` },
+    { id:'l-loop', html:`  <span class="cm">// PASO 6: mostrar los valores</span>` },
+    { id:'l-loop', html:`  Serial.<span class="fn">print</span>(<span class="cm">"Distancia: "</span>); Serial.<span class="fn">print</span>(distancia); Serial.<span class="fn">print</span>(<span class="cm">" cm  -->  "</span>);` },
+    { id:'l-loop', html:`  Serial.<span class="fn">print</span>(<span class="cm">"Angulo: "</span>); Serial.<span class="fn">println</span>(angulo);` },
+    { id:null, html:`` },
+    { id:'l-loop', html:`  <span class="cm">// PASO 7: pequeña pausa antes de medir de nuevo</span>` },
+    { id:'l-loop', html:`  delay(<span class="num">50</span>);` },
+    { id:'l-loop', html:`}` },
+  ];
+  const liveCodeBlock = document.getElementById('liveCodeBlock');
+  liveCodeLines.forEach(l=>{
+    const span = document.createElement('span');
+    span.className = 'lv-line';
+    if(l.id) span.dataset.id = l.id;
+    span.innerHTML = l.html || '&nbsp;';
+    liveCodeBlock.appendChild(span);
+  });
+  function highlightLiveCode(id, cat){
+    document.querySelectorAll('.lv-line').forEach(l=>{
+      l.classList.remove('hl-fisico','hl-traduccion','hl-digital');
+    });
+    if(!id) return;
+    document.querySelectorAll(`.lv-line[data-id="${id}"]`).forEach(l=>{
+      l.classList.add('hl-' + cat);
+    });
+  }
+  function clearLiveHalos(){
+    document.querySelectorAll('#liveSvg .node-highlight').forEach(h=> h.style.opacity = 0);
+  }
+  function clearActiveLiveSteps(){
+    document.querySelectorAll('#livePipeline .p-step').forEach(s=> s.classList.remove('active'));
+  }
+  const distSlider = document.getElementById('distSlider');
+  const distVal = document.getElementById('distVal');
+  const liveDot = document.getElementById('liveDot');
+  const lvObject = document.getElementById('lvObject');
+  const lvObjectLbl = document.getElementById('lvObjectLbl');
+  const lvWaveOut = document.getElementById('lvWaveOut');
+  const lvWaveBack = document.getElementById('lvWaveBack');
+  const lvNeedle = document.getElementById('lvNeedle');
+  const haloWaveOut = document.getElementById('haloWaveOut');
+  const haloObject = document.getElementById('haloObject');
+  function distToX(d){
+    // escala en raíz cuadrada: reparte mejor el rango 2-300cm en el ancho disponible.
+    // el resultado se recorta siempre entre objMinX y objMaxX, así el objeto
+    // JAMÁS puede acercarse ni superponerse a la caja del Arduino (que arranca en ARDUINO_X).
+    const t = Math.max(0, Math.min(1, (d - 2) / (300 - 2)));
+    const x = objMinX + Math.sqrt(t) * (objMaxX - objMinX);
+    return Math.min(x, ARDUINO_X - 50);
+  }
+  function liveUpdate(){
+    const distancia = Number(distSlider.value);
+    distVal.textContent = distancia + ' cm';
+    const duracion = Math.round(distancia * 58.0); // µs — inversa de distancia = duracion/58.0
+    let angulo = Math.round((distancia - DMIN) * 180 / (DMAX - DMIN));
+    angulo = Math.max(0, Math.min(180, angulo));
+    const pwmMs = (1 + (angulo/180)).toFixed(2);
+    // objeto y ondas
+    const objX = distToX(distancia);
+    lvObject.setAttribute('x', objX);
+    lvObjectLbl.setAttribute('x', objX + 15);
+    lvWaveOut.setAttribute('d', `M75,118 Q${(75+objX)/2},95 ${objX},133`);
+    lvWaveBack.setAttribute('d', `M${objX},133 Q${(75+objX)/2},171 75,148`);
+    haloWaveOut.setAttribute('cx', (75+objX)/2);
+    haloObject.setAttribute('x', objX-5);
+    // servo
+    lvNeedle.setAttribute('transform', `rotate(${angulo-90} 765 145)`);
+    // lecturas en el diagrama
+    document.getElementById('lvTextDur').textContent = duracion + ' µs';
+    document.getElementById('lvTextDist').textContent = distancia + ' cm';
+    document.getElementById('lvTextAngle').textContent = angulo + '°';
+    // lecturas del pipeline
+    const setLive = (key, html) => { const el = document.getElementById('lvlive-'+key); if(el) el.innerHTML = html; };
+    setLive('trig', `<span>Trigger HIGH 10 µs → 8 ráfagas a 40 kHz</span>`);
+    setLive('ida', `<span>Onda viajando hacia el objeto (${distancia} cm)</span>`);
+    setLive('rebote', `<span>Rebote a ${distancia} cm de distancia</span>`);
+    setLive('echo', `<span>Echo en HIGH durante ${duracion} µs</span>`);
+    setLive('pulsein', `<span>duracion = ${duracion} (long, µs)</span>`);
+    setLive('map', `<span>distancia = ${distancia} cm → angulo = ${angulo}°</span>`);
+    setLive('pwm', `<span>miServo.write(${angulo}) → pulso de ${pwmMs} ms</span>`);
+    setLive('servo', `<span>Eje del SG-90 en ${angulo}°</span>`);
+  }
+  distSlider.addEventListener('input', ()=>{ if(!livePlaying) liveUpdate(); });
+  liveUpdate();
+  // ---------- Animación del viaje del dato ----------
+  const livePlayBtn = document.getElementById('livePlayBtn');
+  let livePlaying = false;
+  function lvSleep(ms){ return new Promise(res => setTimeout(res, ms)); }
+  async function playLiveJourney(){
+    if(livePlaying) return;
+    livePlaying = true;
+    livePlayBtn.setAttribute('disabled','disabled');
+    livePlayBtn.textContent = '⏳ Reproduciendo…';
+    liveDot.setAttribute('opacity','1');
+    clearLiveHalos();
+    clearActiveLiveSteps();
+    const colorFor = cat => cat==='fisico' ? '#ffb648' : cat==='traduccion' ? '#c07a45' : '#5fd9d0';
+    for(const s of liveStages){
+      liveDot.setAttribute('cx', s.dot.x);
+      liveDot.setAttribute('cy', s.dot.y);
+      liveDot.setAttribute('fill', colorFor(s.cat));
+      clearLiveHalos();
+      const halo = document.getElementById(s.halo);
+      if(halo) halo.style.opacity = 1;
+      clearActiveLiveSteps();
+      const stepEl = document.getElementById('lvstep-' + s.key);
+      if(stepEl){
+        stepEl.classList.add('active');
+        stepEl.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+      highlightLiveCode(s.code, s.cat);
+      await lvSleep(1250);
+    }
+    clearLiveHalos();
+    clearActiveLiveSteps();
+    highlightLiveCode(null);
+    liveDot.setAttribute('opacity','0');
+    livePlaying = false;
+    livePlayBtn.removeAttribute('disabled');
+    livePlayBtn.textContent = '▶ Ver cómo viaja el dato';
+  }
+  livePlayBtn.addEventListener('click', playLiveJourney);
+  // ---------- Alternativas a map() ----------
+  const altColor = { simple:'#5fd9d0', media:'#c07a45', avanzada:'#ffb648' };
+  const altTagLabel = { simple:'Simple', media:'Intermedia', avanzada:'Avanzada' };
+  const alternativas = [
+    {
+      id:'regla3', label:'1. Regla de tres directa', nivel:'simple',
+      desc:'Es la misma matemática que hace map() por dentro, escrita a mano: reescala el rango 5–50 cm al rango 0–180°. La más fácil de justificar en el pizarrón.',
+      code:`float distancia = duracion * 0.0343 / 2;
+int angulo = (distancia - 5) * 180 / (50 - 5);
+angulo = constrain(angulo, 0, 180);
+miServo.write(angulo);`
+    },
+    {
+      id:'mapnativo', label:'2. map() nativo', nivel:'simple',
+      desc:'La función map() de Arduino hace exactamente la cuenta anterior. Es la opción más corta y la que usamos en el circuito de arriba.',
+      code:`int angulo = map(distancia, 5, 50, 0, 180);
+angulo = constrain(angulo, 0, 180);
+miServo.write(angulo);`
+    },
+    {
+      id:'lineal', label:'3. Fórmula lineal calibrada', nivel:'media',
+      desc:'El HC-SR04 real rara vez mide exactamente 5 cm ni 50 cm en los extremos. Conviene medir esos límites a mano y calibrar la fórmula con ellos.',
+      code:`int distMin = 4;   // cm medido de cerca, con el sensor real
+int distMax = 45;  // cm medido lejos, con el sensor real
+int angulo = (distancia - distMin) * 180 / (distMax - distMin);
+angulo = constrain(angulo, 0, 180);`
+    },
+    {
+      id:'inversa', label:'4. Inversa (el brazo señala al objeto)', nivel:'media',
+      desc:'Para que el servo apunte hacia el objeto cuando está cerca, en vez de cuando está lejos — como un brazo que sigue la mano de alguien.',
+      code:`// Opción simple (inversión directa)
+int angulo = 180 - map(distancia, 5, 50, 0, 180);
+// Opción con límites calibrados
+int angulo2 = 180 - (distancia - distMin) * 180 / (distMax - distMin);
+angulo2 = constrain(angulo2, 0, 180);`
+    },
+    {
+      id:'umbral', label:'5. Umbrales (if / else)', nivel:'avanzada',
+      desc:'En vez de una variación continua, el servo salta entre posiciones fijas: cerca, medio, lejos, muy lejos. Útil para mostrar decisiones con más de dos ramas.',
+      code:`int angulo;
+if (distancia < 10) {
+  angulo = 0;       // objeto muy cerca
+} else if (distancia < 20) {
+  angulo = 60;
+} else if (distancia < 35) {
+  angulo = 120;
+} else {
+  angulo = 180;      // objeto lejos o fuera de rango
+}
+miServo.write(angulo);`
+    },
+    {
+      id:'lut', label:'6. Tabla de búsqueda (LUT)', nivel:'avanzada',
+      desc:'El HC-SR04 responde de forma bastante lineal, pero una tabla precalculada permite ajustar a mano la curva de respuesta del servo o del mecanismo que mueve.',
+      code:`// 8 posiciones ajustadas a mano
+const byte tablaAngulos[8] = {0, 25, 55, 85, 110, 135, 160, 180};
+int indice = map(distancia, 5, 50, 0, 7);
+indice = constrain(indice, 0, 7);
+int angulo = tablaAngulos[indice];
+miServo.write(angulo);`
+    },
+  ];
+  const altTabsEl = document.getElementById('altTabs');
+  const altContentEl = document.getElementById('altContent');
+  function renderAlt(id){
+    const a = alternativas.find(x=>x.id===id);
+    altContentEl.innerHTML = `
+      <div>
+        <span class="alt-tag" style="background:${altColor[a.nivel]}22;color:${altColor[a.nivel]}">${altTagLabel[a.nivel]}</span>
+        <p class="alt-desc">${a.desc}</p>
+        <div class="codewrap">
+          <div class="codebar"><span>Arduino</span><span>${a.label.replace(/<[^>]+>/g,'')}</span></div>
+          <pre class="codeblock">${a.code}</pre>
+        </div>
+      </div>`;
+    altTabsEl.querySelectorAll('.tab').forEach(t=> t.classList.toggle('active', t.dataset.id===id));
+  }
+  alternativas.forEach((a,i)=>{
+    const b = document.createElement('button');
+    b.className = 'tab' + (i===0 ? ' active' : '');
+    b.innerHTML = a.label;
+    b.dataset.id = a.id;
+    b.addEventListener('click', ()=> renderAlt(a.id));
+    altTabsEl.appendChild(b);
+  });
+  renderAlt(alternativas[0].id);
+  // ---------- Glosario ----------
+  const glossary = [
+    { term:'HC-SR04', def:'Sensor ultrasónico con dos cápsulas: una emite (TX) y otra recibe (RX) pulsos de sonido a 40 kHz, inaudibles para el oído humano.' },
+    { term:'Trigger (Trig)', def:'Pin de SALIDA. Un pulso HIGH de 10 µs en este pin le ordena al sensor disparar las 8 ráfagas de ultrasonido.' },
+    { term:'Echo', def:'Pin de ENTRADA. Se mantiene en HIGH exactamente el tiempo que tarda la onda en ir hasta el objeto y volver.' },
+    { term:'pulseIn()', def:'Mide, en microsegundos, cuánto tiempo permanece un pin en HIGH (o LOW). Devuelve ese tiempo como un número long.' },
+    { term:'Servo.h', def:'Librería de Arduino que genera automáticamente la señal PWM de 50 Hz necesaria para controlar un servomotor.' },
+    { term:'attach()', def:'Método de la librería Servo que asocia el objeto servo con un pin físico de la placa (en este circuito, el pin 6).' },
+    { term:'write()', def:'Método de la librería Servo que recibe un ángulo (0° a 180°) y mueve el eje del servomotor hasta esa posición.' },
+    { term:'map()', def:'Convierte un número de una escala a otra, como una regla de tres. map(valor, desde_min, desde_max, hacia_min, hacia_max).' },
+    { term:'constrain()', def:'Recorta un número para que no se pase de un mínimo o un máximo, aunque el cálculo previo dé un valor fuera de rango.' },
+    { term:'long', def:'Tipo de dato entero de mayor tamaño que int. Se usa para guardar la duración en microsegundos, que puede ser un número grande.' },
+    { term:'float', def:'Tipo de dato numérico con decimales. Se usa para la distancia en centímetros, que no siempre es un número entero.' },
+    { term:'Serial.print()', def:'Envía texto o valores desde Arduino a la computadora, visibles en el Monitor Serie. Útil para depurar sin usar el circuito visualmente.' },
+  ];
+  document.getElementById('glossary').innerHTML = glossary.map(g=>`
+    <div class="g-item"><span class="g-term">${g.term}</span><p>${g.def}</p></div>
+  `).join('');
+})();
+</script>
+</body>
+</html>
