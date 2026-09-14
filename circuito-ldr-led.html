@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>El circuito en vivo — Sol, LDR y LED con Arduino</title>
+<title>Sol, LDR y LED — Simulación Interactiva Arduino</title>
+<meta name="description" content="Simulación interactiva del circuito LDR + LED con Arduino. Seguí el dato en 8 etapas: de la luz solar al brillo del LED, con el código en vivo.">
+<meta property="og:title" content="Sol, LDR y LED — Simulación Interactiva Arduino">
+<meta property="og:description" content="Movés el sol y toda la cadena reacciona: voltaje, ADC, PWM y el brillo real del LED. Código Arduino en vivo, paso a paso.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://astriandradativani.github.io/SimulacionInteractivaArduino/circuito-ldr-led.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -137,16 +142,64 @@
   .wokwi-fallback{display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap;font-size:.88rem;color:var(--chalk-dim);}
   .wokwi-fallback a{color:var(--digital);text-decoration:underline;}
   footer{padding:34px 0 50px;color:var(--chalk-dim);font-size:.82rem;border-top:1px solid var(--line);margin-top:10px;}
+  /* NAV */
+  .site-nav{border-bottom:1px solid var(--line);padding:14px 0;position:sticky;top:0;z-index:10;background:rgba(22,38,28,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+  .site-nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;}
+  .site-nav .brand{font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:600;color:var(--chalk-dim);text-decoration:none;letter-spacing:.02em;display:flex;align-items:center;gap:8px;}
+  .site-nav .brand:hover{color:var(--chalk);}
+  .site-nav .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--digital);display:inline-block;flex-shrink:0;}
+  .site-nav .breadcrumb{font-size:.78rem;color:var(--chalk-dim);opacity:.7;}
+  .site-nav .breadcrumb a{color:var(--chalk-dim);text-decoration:none;}
+  .site-nav .breadcrumb a:hover{color:var(--chalk);}
+  /* ANIMACIONES DE SEÑAL */
+  @keyframes waveFlow    { to { stroke-dashoffset: -32; } }
+  @keyframes bitsScroll  { to { stroke-dashoffset: -24; } }
+  @keyframes pwmFlow     { to { stroke-dashoffset: -28; } }
+  @keyframes haloBreath  { 0%,100%{opacity:.7} 50%{opacity:1} }
+  @keyframes ledPulse    { 0%,100%{opacity:.15} 50%{opacity:.55} }
+  @keyframes sunPulse    { 0%,100%{r:22} 50%{r:25} }
+  .sig-wave   { stroke-dasharray:8 4; animation: waveFlow 1.2s linear infinite; }
+  .sig-bits   { stroke-dasharray:6 3; animation: bitsScroll .9s linear infinite; }
+  .sig-pwm    { stroke-dasharray:10 5; animation: pwmFlow 1.1s linear infinite; }
+  .halo-active{ animation: haloBreath .9s ease-in-out infinite; }
+  /* PREFERS-CONTRAST */
+  @media (prefers-contrast: more) {
+    :root {
+      --line: rgba(242,236,221,.45);
+      --chalk-dim: #d4e0d6;
+      --bg-panel: #142a1e;
+    }
+  }
+  .wokwi-placeholder{background:#0f1a13;border:1px solid var(--line);border-radius:9px;aspect-ratio:16/10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;cursor:pointer;}
+  .wokwi-placeholder:hover .btn-wokwi{background:var(--digital);color:#0d1710;}
+  .btn-wokwi{display:inline-flex;align-items:center;gap:8px;background:var(--digital-soft);color:var(--digital);border:1px solid var(--digital);border-radius:8px;padding:10px 18px;font-family:'Space Grotesk';font-size:.9rem;font-weight:600;cursor:pointer;transition:.15s;}
+  .wokwi-placeholder p{margin:0;color:var(--chalk-dim);font-size:.85rem;text-align:center;max-width:38ch;}
+  /* SLIDER extremos */
+  .slider-row{display:flex;align-items:center;gap:10px;flex:1;min-width:220px;}
+  .slider-extreme{font-size:.75rem;color:var(--chalk-dim);white-space:nowrap;font-family:'JetBrains Mono';}
+  /* PLAY estado */
+  .play-status{font-size:.78rem;font-family:'JetBrains Mono';color:var(--digital);min-width:120px;}
+  /* SCROLL automático en código */
+  .code-wrap{scroll-behavior:smooth;}
+  /* FOOTER */
+  footer a{color:var(--digital);text-decoration:underline;}
   @media (max-width:640px){
     .p-step{padding-left:46px;}
     .p-num{width:34px;height:34px;font-size:1rem;}
+    .slider-row{min-width:140px;}
   }
 </style>
 </head>
 <body>
+<nav class="site-nav" aria-label="Navegación principal">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="dot"></span>Simulación Interactiva Arduino</a>
+    <span class="breadcrumb"><a href="index.html">Inicio</a> / Sol, LDR y LED</span>
+  </div>
+</nav>
 <div class="hero">
   <div class="wrap">
-    <p class="kicker">Simulación interactiva · sensor de luz + LED, con el código de Arduino en vivo</p>
+    <p class="kicker">Simulación interactiva · sensor de luz + LED, con el código de Arduino en vivo · Instituto Nuestra Señora del Carmen · 2026</p>
     <h1>El circuito <span class="u">en vivo</span></h1>
     <p class="lead">Movés el sol y toda la cadena reacciona: cambia el voltaje que entra al Arduino, el número que sale del ADC, la orden que calcula el código y, al final, el brillo real del LED. Abajo vas a ver <b>el mismo dato</b> viajando físicamente por el cable, entrando al Arduino, y la línea exacta del programa que se ejecuta en cada instante.</p>
   </div>
@@ -154,109 +207,148 @@
 <div class="wrap">
   <div class="panel">
     <div class="sun-control">
-      <label for="sunSlider">☀️ Intensidad del sol</label>
-      <input type="range" id="sunSlider" min="0" max="100" value="55">
-      <span class="pct" id="sunPct">55%</span>
+      <label for="sunSlider">Iluminancia</label>
+      <span class="slider-extreme">0 lux<br>(oscuridad)</span>
+      <div class="slider-row">
+        <input type="range" id="sunSlider" min="0" max="100" value="50" step="1"
+          aria-label="Iluminancia del sol, de 0 lux (oscuridad) a 100 000 lux (sol directo)">
+      </div>
+      <span class="slider-extreme">100 klux<br>(sol directo)</span>
+      <span class="pct" id="sunPct">50%</span>
     </div>
     <div class="play-row">
       <button class="btn-play" id="playBtn">▶ Ver cómo viaja el dato</button>
-      <span class="play-hint">Un punto de luz recorre el circuito: sol → LDR → cable → Arduino → pin 9 → LED. Cada parada enciende el paso y la línea de código que corresponde.</span>
+      <span class="play-status" id="playStatus" aria-live="polite"></span>
+      <span class="play-hint">Sol → LDR → A0 → ADC → map() → pin ~9 → LED. Cada parada enciende la etapa y la línea de código.</span>
     </div>
-    <svg id="circuitSvg" class="diagram-svg" viewBox="0 0 920 380" xmlns="http://www.w3.org/2000/svg">
-      <!-- rails -->
-      <line x1="140" y1="50" x2="700" y2="50" stroke="#f2ecdd" stroke-opacity=".35" stroke-width="2"/>
-      <text x="146" y="42" font-size="12" fill="#a9b8ab">5V</text>
-      <line x1="140" y1="330" x2="780" y2="330" stroke="#f2ecdd" stroke-opacity=".35" stroke-width="2"/>
-      <text x="146" y="352" font-size="12" fill="#a9b8ab">GND</text>
-      <!-- ground hatch -->
-      <g transform="translate(220,330)">
-        <line x1="0" y1="0" x2="0" y2="10" stroke="#a9b8ab" stroke-width="2"/>
-        <line x1="-8" y1="10" x2="8" y2="10" stroke="#a9b8ab" stroke-width="2"/>
-        <line x1="-5" y1="15" x2="5" y2="15" stroke="#a9b8ab" stroke-width="2"/>
-        <line x1="-2" y1="20" x2="2" y2="20" stroke="#a9b8ab" stroke-width="2"/>
-      </g>
-      <!-- SUN -->
-      <g id="sunGroup" transform="translate(85,95)">
-        <g id="sunRays" stroke="#e7b44b" stroke-width="3" stroke-linecap="round"></g>
-        <circle id="sunCore" r="24" fill="#e7b44b"/>
-      </g>
-      <text x="60" y="150" font-size="12" fill="#a9b8ab" class="lbl-es">Sol</text>
-      <!-- light arrows toward LDR -->
-      <g id="lightArrows" stroke="#e7b44b" stroke-width="2" fill="none" stroke-linecap="round">
-        <path d="M110,110 L165,150" marker-end="url(#arrow)"/>
-        <path d="M100,130 L160,168" marker-end="url(#arrow)"/>
-      </g>
+    <svg id="circuitSvg" class="diagram-svg" viewBox="0 0 700 380" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M0,0 L10,5 L0,10 z" fill="#e7b44b"/>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M1,1 L8,5 L1,9" fill="none" stroke="context-stroke" stroke-width="1.8" stroke-linecap="round"/>
         </marker>
+        <clipPath id="clipADC"><rect x="310" y="268" width="88" height="26" rx="3"/></clipPath>
+        <clipPath id="clipCPU"><rect x="406" y="268" width="108" height="26" rx="3"/></clipPath>
+        <clipPath id="clipPWM"><rect x="520" y="198" width="90" height="24" rx="3"/></clipPath>
       </defs>
-      <!-- LDR branch -->
-      <line x1="200" y1="50" x2="200" y2="140" stroke="#f2ecdd" stroke-width="2"/>
-      <path d="M200,140 L192,148 L208,156 L192,164 L208,172 L200,180" stroke="#cc8b9c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <text x="215" y="163" font-size="12" fill="#cc8b9c">LDR</text>
-      <line x1="200" y1="180" x2="200" y2="240" stroke="#f2ecdd" stroke-width="2"/>
-      <circle cx="200" cy="240" r="3.5" fill="#f2ecdd"/>
-      <!-- fixed resistor to GND -->
-      <line x1="200" y1="240" x2="200" y2="270" stroke="#f2ecdd" stroke-width="2"/>
-      <path d="M200,270 L192,278 L208,286 L192,294 L208,302 L200,310" stroke="#f2ecdd" stroke-opacity=".7" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <text x="215" y="292" font-size="11" fill="#a9b8ab">R 10k</text>
-      <line x1="200" y1="310" x2="200" y2="330" stroke="#f2ecdd" stroke-width="2"/>
-      <!-- node to Arduino A0 -->
-      <line x1="200" y1="240" x2="300" y2="240" stroke="#6fc7c2" stroke-width="2.5"/>
-      <!-- Arduino box -->
-      <rect x="300" y="170" width="260" height="130" rx="8" fill="#213a2c" stroke="#6fc7c2" stroke-width="1.5"/>
-      <text x="430" y="200" font-size="14" fill="#f2ecdd" text-anchor="middle" font-weight="600">ARDUINO UNO</text>
-      <text x="308" y="234" font-size="11" fill="#6fc7c2">A0</text>
-      <text x="520" y="204" font-size="11" fill="#cc8b9c" text-anchor="end">~9</text>
-      <!-- zona interna: ADC + CPU (representación pedagógica) -->
-      <g id="adcZone">
-        <rect x="325" y="245" width="70" height="34" rx="5" fill="none" stroke="#6fc7c2" stroke-opacity=".5" stroke-width="1.2" stroke-dasharray="3 3"/>
-        <text x="360" y="266" font-size="9.5" fill="#6fc7c2" text-anchor="middle">ADC</text>
+
+      <!-- ═══════════ ZONA 1: SOL ═══════════ -->
+      <g id="sunGroup" transform="translate(58,110)">
+        <g id="sunRays" stroke="#e7b44b" stroke-width="3" stroke-linecap="round" opacity=".8"></g>
+        <circle id="sunCore" cx="0" cy="0" r="22" fill="#e7b44b"/>
+        <text x="0" y="5" font-size="12" fill="#16261c" text-anchor="middle" font-weight="700" font-family="Inter,sans-serif">Sol</text>
       </g>
-      <g id="cpuZone">
-        <rect x="405" y="245" width="120" height="34" rx="5" fill="none" stroke="#cc8b9c" stroke-opacity=".5" stroke-width="1.2" stroke-dasharray="3 3"/>
-        <text x="465" y="266" font-size="9.5" fill="#cc8b9c" text-anchor="middle">CPU: map()</text>
+      <!-- fotones: reubicado arriba, lejos del sol -->
+      <rect x="2" y="56" width="36" height="22" rx="4" fill="rgba(231,180,75,.16)" stroke="#e7b44b" stroke-width="1" stroke-opacity=".55"/>
+      <text x="20" y="51" font-size="10" fill="#e7b44b" text-anchor="middle" font-family="Inter,sans-serif">fotones</text>
+      <g id="sigLight" clip-path="none">
+        <path id="lightWave" d="M8,110 Q12,103 16,110 Q20,117 24,110 Q28,103 32,110 Q36,117 40,110" fill="none" stroke="#e7b44b" stroke-width="1.8" stroke-linecap="round" class="sig-wave" opacity="0.5"/>
       </g>
-      <!-- Arduino 5V pin up to rail -->
-      <line x1="380" y1="170" x2="380" y2="50" stroke="#f2ecdd" stroke-opacity=".35" stroke-width="2"/>
-      <!-- Arduino GND pin down to rail -->
-      <line x1="480" y1="300" x2="480" y2="330" stroke="#f2ecdd" stroke-opacity=".35" stroke-width="2"/>
-      <!-- output branch -->
-      <line x1="560" y1="210" x2="600" y2="210" stroke="#cc8b9c" stroke-width="2.5"/>
-      <path d="M600,210 L608,202 L616,218 L624,202 L632,218 L640,210" stroke="#f2ecdd" stroke-opacity=".7" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <text x="605" y="196" font-size="11" fill="#a9b8ab">R 220</text>
-      <line x1="640" y1="210" x2="675" y2="210" stroke="#cc8b9c" stroke-width="2.5"/>
-      <!-- LED symbol -->
-      <g transform="translate(675,210)">
-        <path d="M0,-16 L0,16 L26,0 Z" fill="none" stroke="#f2ecdd" stroke-width="2"/>
-        <line x1="26" y1="-16" x2="26" y2="16" stroke="#f2ecdd" stroke-width="2"/>
-        <circle id="ledGlow" cx="13" cy="0" r="34" fill="#e7b44b" opacity="0"/>
-        <g id="ledRays" stroke="#e7b44b" stroke-width="2" stroke-linecap="round" opacity="0">
-          <line x1="30" y1="-10" x2="42" y2="-20"/>
-          <line x1="32" y1="0" x2="46" y2="0"/>
-          <line x1="30" y1="10" x2="42" y2="20"/>
+
+      <line x1="86" y1="104" x2="128" y2="132" stroke="#e7b44b" stroke-width="2" stroke-opacity=".7" marker-end="url(#arr)" stroke-linecap="round"/>
+      <line x1="82" y1="118" x2="126" y2="148" stroke="#e7b44b" stroke-width="1.6" stroke-opacity=".45" marker-end="url(#arr)" stroke-linecap="round"/>
+      <line x1="80" y1="132" x2="124" y2="162" stroke="#e7b44b" stroke-width="1.2" stroke-opacity=".25" marker-end="url(#arr)" stroke-linecap="round"/>
+
+      <!-- ═══════════ ZONA 2: LDR + DIVISOR ═══════════ -->
+      <line x1="110" y1="52" x2="580" y2="52" stroke="#f2ecdd" stroke-opacity=".25" stroke-width="1.5"/>
+      <text x="114" y="46" font-size="12" fill="#a9b8ab" font-family="Inter,sans-serif">5 V</text>
+      <!-- Riel GND recortado (viewBox más chico, sin espacio muerto) -->
+      <line x1="110" y1="345" x2="690" y2="345" stroke="#f2ecdd" stroke-opacity=".25" stroke-width="1.5"/>
+      <text x="114" y="359" font-size="12" fill="#a9b8ab" font-family="Inter,sans-serif">GND</text>
+      <g transform="translate(168,345)">
+        <line x1="0" y1="0" x2="0" y2="8" stroke="#a9b8ab" stroke-width="1.5"/>
+        <line x1="-7" y1="8" x2="7" y2="8" stroke="#a9b8ab" stroke-width="1.5"/>
+        <line x1="-4" y1="12" x2="4" y2="12" stroke="#a9b8ab" stroke-width="1.5"/>
+        <line x1="-1.5" y1="16" x2="1.5" y2="16" stroke="#a9b8ab" stroke-width="1.5"/>
+      </g>
+      <line x1="168" y1="52" x2="168" y2="128" stroke="#f2ecdd" stroke-opacity=".35" stroke-width="1.5"/>
+      <path d="M168,128 L160,136 L176,144 L160,152 L176,160 L168,168" stroke="#cc8b9c" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <text x="182" y="152" font-size="13" fill="#cc8b9c" font-family="Inter,sans-serif">LDR</text>
+      <line x1="168" y1="168" x2="168" y2="200" stroke="#f2ecdd" stroke-opacity=".5" stroke-width="1.5"/>
+      <circle cx="168" cy="200" r="4" fill="#f2ecdd" opacity=".7"/>
+      <line x1="168" y1="200" x2="168" y2="228" stroke="#f2ecdd" stroke-opacity=".35" stroke-width="1.5"/>
+      <path d="M168,228 L160,236 L176,244 L160,252 L176,260 L168,268" stroke="#f2ecdd" stroke-opacity=".55" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <text x="182" y="252" font-size="12" fill="#a9b8ab" font-family="Inter,sans-serif">R 10k</text>
+      <line x1="168" y1="268" x2="168" y2="345" stroke="#f2ecdd" stroke-opacity=".25" stroke-width="1.5"/>
+
+      <line x1="168" y1="200" x2="306" y2="200" stroke="#cc8b9c" stroke-width="3"/>
+      <rect x="168" y="190" width="136" height="20" rx="4" fill="rgba(204,139,156,.14)" stroke="#cc8b9c" stroke-width="1" stroke-opacity=".5"/>
+      <text x="236" y="186" font-size="10" fill="#cc8b9c" text-anchor="middle" font-family="Inter,sans-serif">voltaje analógico</text>
+      <!-- onda sinusoidal SIEMPRE visible; su amplitud crece con la luz (JS la recalcula) -->
+      <path id="analogWave" d="M172,200 C182,192 192,208 202,200 C212,192 222,208 232,200 C242,192 252,208 262,200 C272,192 282,208 292,200" fill="none" stroke="#cc8b9c" stroke-width="1.8" class="sig-wave" opacity="0.5"/>
+      <!-- partícula que recorre el cable en loop continuo, transmite "esto viaja" -->
+      <circle id="analogParticle" r="4" fill="#cc8b9c" opacity="0.9">
+        <animateMotion dur="1.4s" repeatCount="indefinite" path="M172,200 L292,200"/>
+      </circle>
+      <text id="dTextV" x="236" y="220" font-size="13" font-weight="600" fill="#cc8b9c" text-anchor="middle">0.00 V</text>
+
+      <!-- ═══════════ ZONA 3: ARDUINO ═══════════ -->
+      <rect x="306" y="155" width="230" height="175" rx="10" fill="#213a2c" stroke="#6fc7c2" stroke-width="1.5"/>
+      <text x="421" y="180" font-size="14" fill="#f2ecdd" text-anchor="middle" font-weight="600" font-family="Space Grotesk,sans-serif">ARDUINO UNO</text>
+      <text x="314" y="205" font-size="12" fill="#6fc7c2" font-family="Inter,sans-serif">A0</text>
+
+      <rect x="318" y="215" width="88" height="55" rx="6" fill="rgba(111,199,194,.14)" stroke="#6fc7c2" stroke-opacity=".7" stroke-width="1.2" stroke-dasharray="3 2"/>
+      <text x="362" y="230" font-size="11" fill="#6fc7c2" text-anchor="middle" font-family="Inter,sans-serif">ADC 10 bits</text>
+      <rect x="322" y="234" width="80" height="22" rx="3" fill="rgba(111,199,194,.18)" stroke="#6fc7c2" stroke-width="1" stroke-opacity=".6"/>
+      <text id="dTextADC" x="362" y="249" font-size="13" font-weight="600" fill="#6fc7c2" text-anchor="middle" font-family="JetBrains Mono,monospace">0</text>
+      <g id="bitsFlow" clip-path="url(#clipADC)" opacity="0">
+        <text x="322" y="249" font-size="9" fill="#6fc7c2" font-family="JetBrains Mono,monospace" class="sig-bits">0101001011010010</text>
+      </g>
+      <!-- bits binarios: ahora SÍ se actualizan por JS, más grandes y con más contraste -->
+      <text id="dTextBits" x="362" y="264" font-size="11" font-weight="600" fill="#e9f6f4" text-anchor="middle" font-family="JetBrains Mono,monospace">0000000000</text>
+
+      <line x1="406" y1="242" x2="418" y2="242" stroke="#6fc7c2" stroke-width="1.8" marker-end="url(#arr)"/>
+
+      <rect x="418" y="215" width="108" height="55" rx="6" fill="rgba(204,139,156,.14)" stroke="#cc8b9c" stroke-opacity=".7" stroke-width="1.2" stroke-dasharray="3 2"/>
+      <text x="472" y="230" font-size="11" fill="#cc8b9c" text-anchor="middle" font-family="Inter,sans-serif">CPU: map()</text>
+      <rect x="422" y="234" width="100" height="22" rx="3" fill="rgba(204,139,156,.18)" stroke="#cc8b9c" stroke-width="1" stroke-opacity=".6"/>
+      <text id="dTextPWM" x="472" y="249" font-size="13" font-weight="600" fill="#cc8b9c" text-anchor="middle" font-family="JetBrains Mono,monospace">PWM 0</text>
+      <g id="pwmBitsFlow" clip-path="url(#clipCPU)" opacity="0">
+        <text x="422" y="249" font-size="10" fill="#cc8b9c" font-family="JetBrains Mono,monospace" class="sig-bits">11001100 11001100</text>
+      </g>
+      <!-- pin ~9: reubicado fuera del box CPU, debajo del cable de salida, ya no se superpone -->
+      <text x="537" y="248" font-size="12" fill="#cc8b9c" text-anchor="middle" font-family="Inter,sans-serif">~9</text>
+
+      <!-- ═══════════ ZONA 4: SALIDA PWM ═══════════ -->
+      <line x1="536" y1="230" x2="570" y2="230" stroke="#cc8b9c" stroke-width="3"/>
+      <path d="M570,230 L578,222 L586,238 L594,222 L602,238 L610,230" stroke="#f2ecdd" stroke-opacity=".7" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <!-- R 220: reubicado debajo del resistor, ya no se pisa con "señal PWM" -->
+      <text x="590" y="252" font-size="12" fill="#a9b8ab" text-anchor="middle" font-family="Inter,sans-serif">R 220</text>
+      <line x1="610" y1="230" x2="642" y2="230" stroke="#cc8b9c" stroke-width="3"/>
+      <rect x="536" y="218" width="106" height="18" rx="3" fill="rgba(204,139,156,.14)" stroke="#cc8b9c" stroke-width="1" stroke-opacity=".5"/>
+      <!-- señal PWM: subida, separada por completo de R 220 -->
+      <text x="589" y="198" font-size="10" fill="#cc8b9c" text-anchor="middle" font-family="Inter,sans-serif">señal PWM</text>
+      <path id="pwmWave" d="M538,230 L544,230 L544,222 L552,222 L552,230 L560,230 L560,222 L568,222 L568,230 L576,230 L576,222 L584,222 L584,230 L592,230 L592,222 L600,222 L600,230 L608,230 L608,222 L616,222 L616,230 L624,230 L624,222 L632,222 L632,230 L640,230" fill="none" stroke="#cc8b9c" stroke-width="1.8" class="sig-pwm" stroke-dasharray="12 6" opacity="0"/>
+
+      <!-- ═══════════ ZONA 5: LED ═══════════ -->
+      <g transform="translate(642,230)">
+        <path d="M0,-18 L0,18 L28,0 Z" fill="none" stroke="#f2ecdd" stroke-width="2.4"/>
+        <line x1="28" y1="-18" x2="28" y2="18" stroke="#f2ecdd" stroke-width="2.4"/>
+        <path d="M0,-18 L0,18 L28,0 Z" fill="#e7b44b" id="ledFill" opacity="0.12"/>
+        <circle id="ledGlow" cx="14" cy="0" r="36" fill="#e7b44b" opacity="0"/>
+        <g id="ledRays" stroke="#e7b44b" stroke-width="2.4" stroke-linecap="round" opacity="0">
+          <line x1="34" y1="-14" x2="46" y2="-24"/>
+          <line x1="36" y1="0"   x2="50" y2="0"/>
+          <line x1="34" y1="14"  x2="46" y2="24"/>
         </g>
-        <path d="M0,-16 L0,16 L26,0 Z" fill="#e7b44b" id="ledFill" opacity="0.15"/>
       </g>
-      <text x="700" y="245" font-size="12" fill="#a9b8ab" class="lbl-es">LED</text>
-      <line x1="701" y1="226" x2="701" y2="330" stroke="#f2ecdd" stroke-width="2"/>
-      <!-- live readouts on diagram -->
-      <text id="dTextV" x="245" y="255" font-size="12" fill="#cc8b9c">0.00 V</text>
-      <text id="dTextADC" x="330" y="292" font-size="10.5" fill="#6fc7c2" text-anchor="middle">0</text>
-      <text id="dTextPWM" x="465" y="292" font-size="10.5" fill="#cc8b9c" text-anchor="middle">PWM 0</text>
-      <!-- halos de parada del recorrido (se activan durante la animación) -->
-      <circle id="haloSun" class="node-highlight" cx="97" cy="107" r="34" fill="none" stroke="#e7b44b" stroke-width="2.5"/>
-      <circle id="haloLDR" class="node-highlight" cx="200" cy="160" r="20" fill="none" stroke="#cc8b9c" stroke-width="2.5"/>
-      <circle id="haloA0" class="node-highlight" cx="300" cy="240" r="14" fill="none" stroke="#6fc7c2" stroke-width="2.5"/>
-      <rect id="haloADC" class="node-highlight" x="322" y="242" width="76" height="40" rx="7" fill="none" stroke="#6fc7c2" stroke-width="2.5"/>
-      <rect id="haloCPU" class="node-highlight" x="402" y="242" width="126" height="40" rx="7" fill="none" stroke="#cc8b9c" stroke-width="2.5"/>
-      <circle id="haloPin9" class="node-highlight" cx="540" cy="210" r="14" fill="none" stroke="#cc8b9c" stroke-width="2.5"/>
-      <circle id="haloLED" class="node-highlight" cx="688" cy="210" r="30" fill="none" stroke="#e7b44b" stroke-width="2.5"/>
-      <!-- el dato viajando -->
-      <circle id="dataDot" cx="97" cy="107" r="7" fill="#f2ecdd" opacity="0"/>
+      <text x="660" y="268" font-size="13" fill="#a9b8ab" text-anchor="middle" font-family="Inter,sans-serif">LED</text>
+      <line x1="670" y1="248" x2="670" y2="345" stroke="#f2ecdd" stroke-opacity=".3" stroke-width="1.5"/>
+
+      <!-- ═══════════ HALOS ═══════════ -->
+      <circle id="haloSun"  class="node-highlight" cx="58"  cy="110" r="38"  fill="none" stroke="#e7b44b" stroke-width="2.5"/>
+      <circle id="haloLDR"  class="node-highlight" cx="168" cy="148" r="26"  fill="none" stroke="#cc8b9c" stroke-width="2.5"/>
+      <circle id="haloA0"   class="node-highlight" cx="308" cy="200" r="14"  fill="none" stroke="#6fc7c2" stroke-width="2.5"/>
+      <rect   id="haloADC"  class="node-highlight" x="315"  y="212"  width="96"  height="62" rx="8" fill="none" stroke="#6fc7c2" stroke-width="2.5"/>
+      <rect   id="haloCPU"  class="node-highlight" x="415"  y="212"  width="114" height="62" rx="8" fill="none" stroke="#cc8b9c" stroke-width="2.5"/>
+      <circle id="haloPin9" class="node-highlight" cx="537" cy="230" r="14"  fill="none" stroke="#cc8b9c" stroke-width="2.5"/>
+      <circle id="haloLED"  class="node-highlight" cx="656" cy="230" r="34"  fill="none" stroke="#e7b44b" stroke-width="2.5"/>
+
+      <!-- ═══════════ PUNTO VIAJERO (modo "play" paso a paso) ═══════════ -->
+      <circle id="dataDot" cx="58" cy="110" r="8" fill="#f2ecdd" opacity="0"/>
     </svg>
-    <p class="pipe-intro" style="margin-top:6px;">El sol ilumina el LDR → el LDR y la resistencia forman un divisor de tensión → ese voltaje entra por A0 → el Arduino lo convierte, decide y arma la orden → esa orden sale por el pin ~9 y regula el brillo del LED.</p>
+    <p class="pipe-intro" style="margin-top:8px;">
+      ☀️ fotones → onda analógica de voltaje → bits ADC (0–1023) → map() reescala a 0–255 → pulsos PWM → brillo del LED 💡
+    </p>
   </div>
   <div class="panel">
     <h2>La ruta del dato, paso a paso</h2>
@@ -266,40 +358,46 @@
   <div class="panel">
     <h2>El código que hace todo esto</h2>
     <p class="pipe-intro">Este es un programa (sketch) real de Arduino. No hace falta memorizarlo: mirá cómo, línea por línea, es literalmente la traducción de los pasos de arriba. Cuando reproducís el viaje del dato, la línea que se está ejecutando se ilumina acá.</p>
-    <div class="code-wrap"><pre id="codeBlock" style="margin:0;"></pre></div>
+    <p class="pipe-intro" style="margin-top:-12px;font-size:.8rem;">Compatible con <strong>Arduino IDE 1.8+</strong> y <strong>Arduino IDE 2.x</strong>. No requiere librerías externas.</p>
+    <div class="code-wrap" style="max-height:340px;overflow-y:auto;"><pre id="codeBlock" style="margin:0;"></pre></div>
+  </div>
+  <div class="panel">
+    <h2>Glosario rápido</h2>
+    <p class="pipe-intro">Los términos técnicos que vas a necesitar para hablar de este circuito. Si mientras usás el slider encontrás una palabra que no conocés, acá está la definición.</p>
+    <div class="glossary" id="glossary"></div>
   </div>
   <div class="panel">
     <h2 style="margin:0 0 6px;font-size:1.3rem;">Alternativas a map(): de lo simple a lo complejo</h2>
-    <p class="pipe-intro">Arriba usamos <code>map(lecturaADC, 0, 1023, 255, 0)</code> — invertido a propósito, para que a más luz el LED se apague. Estas seis formas muestran la misma traducción de rango escrita a mano, primero en su versión directa (más simple de entender) y en la alternativa 4 exactamente con la inversión que usamos arriba.</p>
+    <p class="pipe-intro">Arriba usamos <code>map(lecturaADC, 0, 1023, 255, 0)</code> — invertido a propósito, para que a más luz el LED se apague. Estas seis formas muestran la misma traducción de rango escrita a mano.</p>
     <div class="tabs" id="altTabs"></div>
     <div id="altContent"></div>
   </div>
   <div class="panel">
     <h2 style="margin:0 0 6px;font-size:1.3rem;">Probalo en Wokwi</h2>
-    <p class="pipe-intro">Esta es la simulación real, con el código completo, para armar el circuito y correrlo paso a paso.</p>
-    <iframe class="wokwi-frame" src="https://wokwi.com/projects/473874564408623105" title="Simulación Wokwi: LDR y LED con Arduino UNO" loading="lazy"></iframe>
-    <div class="wokwi-fallback">
-      <span>¿No carga el recuadro de arriba?</span>
-      <a href="https://wokwi.com/projects/473874564408623105" target="_blank" rel="noopener">Abrir el proyecto en Wokwi en una pestaña nueva ↗</a>
+    <p class="pipe-intro">El mismo circuito, armado y listo para correr. Podés mover el potenciómetro que simula el LDR y verificar que el LED cambia de brillo exactamente como predice la simulación de arriba.</p>
+    <div id="wokwiContainer">
+      <div class="wokwi-placeholder" id="wokwiPlaceholder" role="button" tabindex="0" aria-label="Cargar simulación en Wokwi">
+        <p>La simulación de Wokwi carga bajo demanda para no afectar la velocidad de la página.</p>
+        <span class="btn-wokwi">▶ Cargar simulación en Wokwi</span>
+      </div>
     </div>
-  </div>
-  <div class="panel">
-    <h2>Glosario rápido</h2>
-    <p class="pipe-intro">Los términos técnicos que vas a necesitar para hablar de este circuito con propiedad.</p>
-    <div class="glossary" id="glossary"></div>
+    <div class="wokwi-fallback" id="wokwiFallback" style="display:none;">
+      <span>¿No cargó?</span>
+      <a href="https://wokwi.com/projects/473874564408623105" target="_blank" rel="noopener">Abrir Wokwi en una pestaña nueva ↗</a>
+    </div>
   </div>
 </div>
 <footer>
   <div class="wrap">
-    El circuito en vivo — un mismo dato, ocho etapas, hasta llegar al LED.<br>Esp. Ing. Astri Edith Andrada Tivani
-    <p style="margin:16px 0 0;padding-top:16px;border-top:1px solid var(--line);font-size:.8rem;">
-      Este material está bajo una licencia <strong>Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional (CC BY-NC-SA 4.0)</strong>.
-      Sos libre de compartir y adaptar este material, siempre que:
-      <br>— Des crédito a la autora: Esp. Ing. Astri Edith Andrada Tivani
-      <br>— No le des un uso comercial
-      <br>— Distribuyas cualquier adaptación bajo esta misma licencia
-      <br>Texto legal completo: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.es" style="color:var(--digital);">https://creativecommons.org/licenses/by-nc-sa/4.0/deed.es</a>
-    </p>
+    Sol, LDR y LED — un mismo dato, ocho etapas, hasta llegar al LED.<br>
+    Esp. Ing. Astri Edith Andrada Tivani · Instituto Nuestra Señora del Carmen · 2026<br>
+    <span style="opacity:.8;font-size:.8rem;">
+      Licencia <a href="https://github.com/astriandradativani/SimulacionInteractivaArduino/blob/main/LICENSE" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/astriandradativani/SimulacionInteractivaArduino" target="_blank" rel="noopener">Código fuente en GitHub</a>
+      &nbsp;·&nbsp;
+      <a href="index.html">← Volver al inicio</a>
+    </span>
   </div>
 </footer>
 <script>
@@ -324,42 +422,39 @@ function barSvg(pct, color){
   </svg>`;
 }
 // ---------- Datos de cada paso ----------
-// codeLine: id de la línea del sketch que se enciende en ese paso.
-// dot: coordenadas del punto que representa "el dato" en ese instante.
-// halo: id del círculo/rectángulo que rodea la zona activa del circuito.
 const stages = [
   { cat:'fisico', icon:'☀️', title:'1. Estímulo físico', tag:'Sol (no es código, es el mundo real)', key:'sun',
     desc:'La cantidad de luz que llega al sensor cambia según la posición del control. Arduino todavía no sabe nada de esto: es pura física, fotones golpeando el LDR.',
     arduino:'Este paso <b>no tiene línea de código</b>. Arduino no "ve" el sol: solo va a ver, más adelante, el efecto que la luz produce sobre el voltaje.',
-    dot:{x:97,y:107}, halo:'haloSun', code:null },
-  { cat:'traduccion', icon:'', title:'2. Sensado (el mundo se convierte en voltaje)', tag:'LDR + R 10k → divisor de tensión', key:'voltage',
-    desc:'El LDR cambia su resistencia según la luz. Junto a la resistencia fija de 10kΩ arma un "divisor de tensión": el punto entre ambos entrega un voltaje continuo, entre 0 y 5 V, que sí es una magnitud eléctrica.',
-    arduino:'Todavía no hay instrucción de Arduino ejecutándose: esto pasa afuera del chip, en el cableado. Es el paso obligado antes de que el pin <b>A0</b> pueda leer algo.',
-    dot:{x:200,y:160}, halo:'haloLDR', code:null },
-  { cat:'digital', icon:'', title:'3. Entrada al pin A0', tag:'analogRead(A0)', key:'entrada',
+    dot:{x:58,y:110}, halo:'haloSun', sig:'lightWave', code:null },
+  { cat:'traduccion', icon:'⚡', title:'2. Sensado — el mundo se convierte en voltaje', tag:'LDR + R 10k → divisor de tensión', key:'voltage',
+    desc:'El LDR cambia su resistencia según la luz. Junto a la resistencia fija de 10 kΩ forma un divisor de tensión: el punto entre ambos entrega un voltaje continuo entre 0 y 5 V.',
+    arduino:'Todavía no hay instrucción de Arduino ejecutándose: esto pasa afuera del chip, en el cableado.',
+    dot:{x:168,y:148}, halo:'haloLDR', sig:'analogWave', code:null },
+  { cat:'digital', icon:'🔌', title:'3. Entrada al pin A0', tag:'analogRead(A0)', key:'entrada',
     desc:'El cable lleva ese voltaje hasta el pin A0 de la placa. Ahí es donde Arduino "agarra" el dato del mundo exterior por primera vez.',
-    arduino:'La instrucción <b>analogRead(A0)</b> le dice al microcontrolador: "medí el voltaje que hay ahora mismo en el pin A0". Fijate que <b>A0</b> no es un número al azar: es el nombre del pin analógico 0 de la placa.',
-    dot:{x:300,y:240}, halo:'haloA0', code:'l-read' },
-  { cat:'digital', icon:'', title:'4. Conversión ADC', tag:'0–5V → 0–1023', key:'adc',
-    desc:'Adentro del chip hay un conversor analógico-digital (ADC) de 10 bits. Traduce ese voltaje continuo en un número entero entre 0 y 1023: 0V es 0, 5V es 1023, y todo lo del medio se reparte proporcionalmente.',
-    arduino:'Esto es lo que hace <b>analogRead()</b> por dentro: no devuelve voltios, devuelve un <b>int</b> (número entero) de 0 a 1023. Por eso el resultado se guarda en la variable <b>valorADC</b>.',
-    dot:{x:360,y:262}, halo:'haloADC', code:'l-read' },
-  { cat:'digital', icon:'', title:'5. Procesamiento', tag:'map()', key:'map',
-    desc:'El código toma ese número (0-1023) y lo reescala al rango 0-255 que necesita analogWrite(), pero invertido: a más luz, un valor de salida más bajo (para que el LED se apague de día y se prenda de noche).',
-    arduino:'La función <b>map(valor, 0, 1023, 255, 0)</b> hace una regla de tres: recibe el número del ADC y devuelve el equivalente en la escala de salida. Como se invierten los extremos (255→0), el resultado queda al revés a propósito.',
-    dot:{x:465,y:262}, halo:'haloCPU', code:'l-map' },
-  { cat:'digital', icon:'', title:'6. Generación de la orden', tag:'analogWrite(9, valorPWM)', key:'order',
-    desc:'Con el número ya calculado, el programa arma la orden final: "prendé el pin 9 con esta intensidad". Esa orden todavía está adentro del microcontrolador.',
-    arduino:'<b>analogWrite(9, valorPWM)</b> es la instrucción que empaqueta el resultado y lo manda hacia el pin 9. Ojo: el pin 9 tiene el símbolo <b>~</b> en la placa porque es uno de los pines que soportan PWM.',
-    dot:{x:540,y:210}, halo:'haloPin9', code:'l-write' },
-  { cat:'traduccion', icon:'', title:'7. Transmisión de salida (PWM)', tag:'Pin ~9', key:'pwm',
-    desc:'El pin no puede entregar "voltajes intermedios" de verdad: solo sabe estar en 5V o en 0V. Lo que hace es prender y apagar muchísimas veces por segundo. Si está prendido más tiempo que apagado, el LED "ve" más brillo promedio.',
-    arduino:'Esta rapidísima secuencia de encendidos y apagados se llama <b>PWM</b> (modulación por ancho de pulso) y es la forma que tiene Arduino de simular una salida analógica usando solo señales digitales.',
-    dot:{x:600,y:210}, halo:'haloPin9', code:'l-write' },
-  { cat:'fisico', icon:'💡', title:'8. Respuesta física', tag:'LED', key:'led',
-    desc:'La corriente que circula por el LED (limitada por la resistencia de 220Ω) se convierte en luz visible. El ojo humano no percibe el parpadeo del PWM: lo interpreta como un brillo continuo, más o menos intenso.',
-    arduino:'El código ya terminó su trabajo. El <b>loop()</b> vuelve a empezar desde la primera línea y todo el recorrido se repite, muchas veces por segundo, para siempre.',
-    dot:{x:688,y:210}, halo:'haloLED', code:null },
+    arduino:'La instrucción <b>analogRead(A0)</b> le dice al microcontrolador: "medí el voltaje que hay ahora mismo en el pin A0".',
+    dot:{x:308,y:200}, halo:'haloA0', sig:'analogWave', code:'l-read' },
+  { cat:'digital', icon:'🔢', title:'4. Conversión ADC — voltaje a número binario', tag:'0–5 V → 0–1023', key:'adc',
+    desc:'Adentro del chip hay un conversor analógico-digital (ADC) de 10 bits. Traduce ese voltaje continuo en un número entero entre 0 y 1023.',
+    arduino:'Esto es lo que hace <b>analogRead()</b> por dentro: no devuelve voltios, devuelve un número de 0 a 1023 de 10 bits.',
+    dot:{x:362,y:242}, halo:'haloADC', sig:'bitsFlow', code:'l-read' },
+  { cat:'digital', icon:'⚙️', title:'5. Procesamiento — map() reescala los bits', tag:'map()', key:'map',
+    desc:'El código toma el número de 10 bits (0–1023) y lo reescala al rango de 8 bits (0–255) que necesita analogWrite(), pero invertido.',
+    arduino:'La función <b>map(valor, 0, 1023, 255, 0)</b> hace una regla de tres y da vuelta la escala: más luz → número más bajo.',
+    dot:{x:472,y:242}, halo:'haloCPU', sig:'pwmBitsFlow', code:'l-map' },
+  { cat:'digital', icon:'📤', title:'6. Generación de la orden', tag:'analogWrite(9, valorPWM)', key:'order',
+    desc:'Con el número ya calculado, el programa arma la orden final y la manda al pin ~9.',
+    arduino:'<b>analogWrite(9, valorPWM)</b> empaqueta el resultado. El pin 9 tiene el símbolo <b>~</b> porque soporta PWM.',
+    dot:{x:537,y:230}, halo:'haloPin9', sig:'pwmWave', code:'l-write' },
+  { cat:'traduccion', icon:'〰️', title:'7. Transmisión de salida — señal PWM', tag:'Pin ~9', key:'pwm',
+    desc:'El pin alterna entre 5 V y 0 V miles de veces por segundo. Si está encendido más tiempo, el LED recibe más energía promedio y brilla más.',
+    arduino:'Esta rapidísima secuencia de encendidos y apagados se llama <b>PWM</b> — es la forma que tiene Arduino de simular una salida analógica.',
+    dot:{x:590,y:230}, halo:'haloPin9', sig:'pwmWave', code:'l-write' },
+  { cat:'fisico', icon:'💡', title:'8. Respuesta física — el LED brilla', tag:'LED', key:'led',
+    desc:'La corriente que circula por el LED (limitada por la resistencia de 220 Ω) se convierte en luz visible. El ojo no percibe el parpadeo del PWM: lo interpreta como brillo continuo.',
+    arduino:'El código ya terminó su trabajo. El <b>loop()</b> vuelve a empezar y todo el recorrido se repite, muchas veces por segundo.',
+    dot:{x:656,y:230}, halo:'haloLED', sig:null, code:null },
 ];
 const pipelineEl = document.getElementById('pipeline');
 stages.forEach(s=>{
@@ -382,16 +477,18 @@ stages.forEach(s=>{
 });
 // ---------- Glosario ----------
 const glossary = [
-  { term:'pinMode()', def:'Se usa una sola vez, en setup(). Le dice a Arduino si un pin va a ser ENTRADA (INPUT) o SALIDA (OUTPUT) antes de usarlo.' },
-  { term:'setup()', def:'Función que se ejecuta una única vez, al arrancar la placa. Ahí se configuran los pines y lo que necesite prepararse.' },
+  { term:'pinMode()', def:'Se usa una sola vez, en setup(). Le decís a Arduino si un pin va a ser ENTRADA (INPUT) o SALIDA (OUTPUT) antes de usarlo.' },
+  { term:'setup()', def:'Función que se ejecuta una única vez, al arrancar la placa. Ahí configurás los pines y todo lo que necesitás preparar.' },
   { term:'loop()', def:'Función que se repite en bucle infinito mientras la placa tenga energía. Ahí vive la lógica que se repite: leer, calcular y escribir.' },
-  { term:'analogRead()', def:'Lee un voltaje (0 a 5V) en un pin analógico y lo devuelve como un número entero de 0 a 1023 (10 bits).' },
+  { term:'analogRead()', def:'Lee un voltaje (0 a 5 V) en un pin analógico y te lo devuelve como un número entero de 0 a 1023 (10 bits).' },
   { term:'analogWrite()', def:'Genera una señal PWM en un pin digital "~", con un valor de 0 (siempre apagado) a 255 (siempre prendido).' },
   { term:'map()', def:'Convierte un número de una escala a otra, como una regla de tres. map(valor, desde_min, desde_max, hacia_min, hacia_max).' },
   { term:'int', def:'Tipo de dato: un número entero. Todas las variables de este programa (valorADC, valorPWM) son int.' },
   { term:'PWM', def:'Modulación por ancho de pulso: encendidos y apagados muy rápidos que, promediados, se sienten como una intensidad intermedia.' },
   { term:'ADC', def:'Conversor analógico-digital: el circuito interno del chip que traduce un voltaje continuo en un número binario.' },
-  { term:'bit / byte', def:'Un bit es un 0 o un 1. Un byte son 8 bits. El ADC de Arduino Uno usa 10 bits (0-1023); analogWrite usa 8 bits (0-255).' },
+  { term:'bit / byte', def:'Un bit es un 0 o un 1. Un byte son 8 bits. El ADC de Arduino Uno usa 10 bits (0–1023); analogWrite usa 8 bits (0–255).' },
+  { term:'divisor de tensión', def:'Dos resistencias en serie donde el voltaje del punto medio depende de la proporción entre ellas. El LDR forma un divisor con la R de 10 kΩ.' },
+  { term:'iluminancia', def:'Medida de la cantidad de luz que llega a una superficie. Se mide en lux. El slider de esta simulación representa la iluminancia sobre el LDR.' },
 ];
 document.getElementById('glossary').innerHTML = glossary.map(g=>`
   <div class="g-item"><span class="g-term">${g.term}</span><p>${g.def}</p></div>
@@ -476,9 +573,15 @@ function update(){
   });
   sunCore.setAttribute('fill', intensity > 50 ? '#e7b44b' : '#8a7134');
   sunCore.setAttribute('r', 20 + (intensity/100)*6);
+  // onda sinusoidal analógica: amplitud crece con la intensidad (más señal, más luz)
+  const amp = 4 + (intensity/100)*10;
+  const y0 = 200;
+  const analogPath = `M172,${y0} C182,${y0-amp} 192,${y0+amp} 202,${y0} C212,${y0-amp} 222,${y0+amp} 232,${y0} C242,${y0-amp} 252,${y0+amp} 262,${y0} C272,${y0-amp} 282,${y0+amp} 292,${y0}`;
+  document.getElementById('analogWave').setAttribute('d', analogPath);
   // diagram readouts
   document.getElementById('dTextV').textContent = voltage.toFixed(2) + ' V';
   document.getElementById('dTextADC').textContent = adc;
+  document.getElementById('dTextBits').textContent = bits; // bug corregido: ahora sí se actualiza
   document.getElementById('dTextPWM').textContent = 'PWM ' + pwm;
   // LED glow
   ledGlow.setAttribute('opacity', (ledPct/100 * 0.55).toFixed(2));
@@ -503,12 +606,29 @@ function update(){
     `<span class="readout" style="color:#e7b44b">Brillo del LED: ${ledPct}%</span>`;
 }
 slider.addEventListener('input', ()=>{
-  if(playing) return; // no interferir mientras se reproduce la animación
+  if(playing) return;
   update();
 });
-update();
+update(); // inicializa con 50% → valores no nulos desde el arranque
+// ---------- Referencias nuevas del SVG ----------
+const lightWave  = document.getElementById('lightWave');
+const analogWave = document.getElementById('analogWave');
+const bitsFlow   = document.getElementById('bitsFlow');
+const pwmBitsFlow= document.getElementById('pwmBitsFlow');
+const pwmWave    = document.getElementById('pwmWave');
+
+// las señales analógicas (luz/voltaje) quedan siempre visibles a baja opacidad como "latido" continuo;
+// las digitales (bits/PWM) solo se destacan durante el recorrido paso a paso
+function hideSigs(){
+  [bitsFlow,pwmBitsFlow,pwmWave].forEach(s=>{ if(s) s.setAttribute('opacity','0'); });
+  if(lightWave)  lightWave.setAttribute('opacity','0.5');
+  if(analogWave) analogWave.setAttribute('opacity','0.5');
+}
+hideSigs(); // estado inicial
+
 // ---------- Animación "viaje del dato" ----------
 const playBtn = document.getElementById('playBtn');
+const playStatus = document.getElementById('playStatus');
 let playing = false;
 function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 async function playJourney(){
@@ -517,16 +637,23 @@ async function playJourney(){
   playBtn.setAttribute('disabled','disabled');
   playBtn.textContent = '⏳ Reproduciendo…';
   dataDot.setAttribute('opacity','1');
-  clearHalos();
-  clearActiveSteps();
-  for(const s of stages){
-    // mover el punto
+  clearHalos(); clearActiveSteps(); hideSigs();
+  for(let i=0; i<stages.length; i++){
+    const s = stages[i];
+    playStatus.textContent = `Etapa ${i+1} de ${stages.length}`;
+    // mover punto viajero
     dataDot.setAttribute('cx', s.dot.x);
     dataDot.setAttribute('cy', s.dot.y);
+    dataDot.setAttribute('r', '8');
     dataDot.setAttribute('fill', s.cat==='fisico' ? '#e7b44b' : s.cat==='traduccion' ? '#cc8b9c' : '#6fc7c2');
-    clearHalos();
+    clearHalos(); hideSigs();
+    // activar señal correspondiente a la etapa
+    if(s.sig){
+      const sigEl = document.getElementById(s.sig);
+      if(sigEl) sigEl.setAttribute('opacity','1');
+    }
     const halo = document.getElementById(s.halo);
-    if(halo) halo.style.opacity = 1;
+    if(halo){ halo.style.opacity = 1; halo.classList.add('halo-active'); }
     clearActiveSteps();
     const stepEl = document.getElementById('step-' + s.key);
     if(stepEl){
@@ -534,17 +661,36 @@ async function playJourney(){
       stepEl.scrollIntoView({behavior:'smooth', block:'center'});
     }
     highlightCode(s.code, s.cat);
-    await sleep(1350);
+    if(s.code){
+      const activeLine = document.querySelector(`.code-line[data-id="${s.code}"]`);
+      if(activeLine) activeLine.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+    await sleep(1600);
   }
-  clearHalos();
-  clearActiveSteps();
-  highlightCode(null);
+  clearHalos(); clearActiveSteps(); hideSigs(); highlightCode(null);
   dataDot.setAttribute('opacity','0');
   playing = false;
   playBtn.removeAttribute('disabled');
   playBtn.textContent = '▶ Ver cómo viaja el dato';
+  playStatus.textContent = 'Completado ✓';
+  setTimeout(()=>{ playStatus.textContent=''; }, 2500);
 }
 playBtn.addEventListener('click', playJourney);
+// ---------- Wokwi lazy-load ----------
+const wokwiPlaceholder = document.getElementById('wokwiPlaceholder');
+const wokwiFallback = document.getElementById('wokwiFallback');
+function loadWokwi(){
+  const iframe = document.createElement('iframe');
+  iframe.src = 'https://wokwi.com/projects/473874564408623105';
+  iframe.title = 'Simulación Wokwi: LDR y LED con Arduino UNO';
+  iframe.className = 'wokwi-frame';
+  iframe.setAttribute('allowfullscreen','');
+  wokwiPlaceholder.replaceWith(iframe);
+  wokwiFallback.style.display = 'flex';
+  setTimeout(()=>{ wokwiFallback.style.display='flex'; }, 8000);
+}
+wokwiPlaceholder.addEventListener('click', loadWokwi);
+wokwiPlaceholder.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' ') loadWokwi(); });
 // ---------- Alternativas a map() ----------
 const altColor = { simple:'#6fc7c2', media:'#cc8b9c', avanzada:'#e7b44b' };
 const altTagLabel = { simple:'Simple', media:'Intermedia', avanzada:'Avanzada' };
