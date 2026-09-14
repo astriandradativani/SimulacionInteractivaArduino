@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simulación Interactiva Arduino — Inicio</title>
+<title>Simulación Interactiva Arduino — Instituto Ntra. Sra. del Carmen</title>
+<meta name="description" content="Simulaciones interactivas de circuitos Arduino para 3.º año. Seguí el dato desde el sensor hasta el actuador, paso a paso, con el código en vivo.">
+<meta property="og:title" content="Simulación Interactiva Arduino">
+<meta property="og:description" content="Seguí el dato desde el sensor hasta el actuador. Simulaciones interactivas con código Arduino en vivo — 3.º año, Instituto Ntra. Sra. del Carmen.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://astriandradativani.github.io/SimulacionInteractivaArduino/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -62,20 +67,57 @@
     border:1px solid var(--line); padding:2px 8px; border-radius:20px;
   }
 
+  /* NAV */
+  .site-nav{
+    border-bottom:1px solid var(--line);
+    padding:14px 0;
+    position:sticky; top:0; z-index:10;
+    background:rgba(22,38,28,.94);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+  }
+  .site-nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;}
+  .site-nav .brand{
+    font-family:'Space Grotesk',sans-serif; font-size:.9rem; font-weight:600;
+    color:var(--chalk-dim); text-decoration:none; letter-spacing:.02em;
+    display:flex; align-items:center; gap:8px;
+  }
+  .site-nav .brand:hover{color:var(--chalk);}
+  .site-nav .brand .dot{
+    width:8px; height:8px; border-radius:50%; background:var(--digital); display:inline-block; flex-shrink:0;
+  }
+  .site-nav .course-tag{
+    font-size:.75rem; color:var(--chalk-dim); opacity:.7;
+    border:1px solid var(--line); padding:2px 10px; border-radius:20px; white-space:nowrap;
+  }
+
+  /* CARDS DISABLED — más subordinadas */
+  .card.disabled{ opacity:.38; cursor:default; filter:saturate(.3); }
+  .card.disabled:hover{ transform:none; border-color:var(--line); }
+
   footer{padding:34px 0 50px;color:var(--chalk-dim);font-size:.82rem;border-top:1px solid var(--line);margin-top:20px;}
-  footer a{color:inherit;}
+  footer a{color:inherit;text-decoration:underline;}
 </style>
 </head>
 <body>
 
+<nav class="site-nav" aria-label="Navegación principal">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <span class="dot"></span>Simulación Interactiva Arduino
+    </a>
+    <span class="course-tag">3.º año · Inst. Ntra. Sra. del Carmen</span>
+  </div>
+</nav>
+
 <div class="hero">
   <div class="wrap">
-    <p class="kicker">Simulación Interactiva Arduino · 3.º año</p>
+    <p class="kicker">Simulación Interactiva Arduino · 3.º año · Instituto Nuestra Señora del Carmen</p>
     <h1>La ruta del <span class="u">dato</span>, en vivo</h1>
-    <p class="lead">Cada ejemplo de acá abajo simula un sensor distinto controlado por vos, y muestra en tiempo real las siete etapas que atraviesa la información: del mundo físico al digital, y de vuelta al mundo físico.</p>
+    <p class="lead">Cada ejemplo de acá abajo simula un sensor distinto controlado por vos, y muestra en tiempo real las ocho etapas que atraviesa la información: del mundo físico al digital, y de vuelta al mundo físico.</p>
 
     <div class="grid">
-      <a class="card c-fisico" href="circuito-ldr-led.html">
+      <a class="card c-fisico" href="circuito-ldr-led.html" aria-label="Abrir simulación: Sol, LDR y LED">
         <div class="icon">☀️ → 💡</div>
         <h2>Sol, LDR y LED</h2>
         <p>Movés la intensidad del sol y ves cómo cambia el voltaje, el número del ADC, la orden PWM y el brillo real del LED.</p>
@@ -83,7 +125,7 @@
         <span class="go">Abrir el ejemplo →</span>
       </a>
 
-      <a class="card c-digital" href="circuito-ultrasonido-servo.html">
+      <a class="card c-digital" href="circuito-ultrasonido-servo.html" aria-label="Abrir simulación: Ultrasonido y servomotor">
         <div class="icon">📏 → ⚙️</div>
         <h2>Ultrasonido y servomotor</h2>
         <p>Movés la distancia de un objeto y ves cómo cambia el tiempo de eco, el número que calcula pulseIn(), el ángulo de map() y el giro real del servomotor.</p>
@@ -91,19 +133,19 @@
         <span class="go">Abrir el ejemplo →</span>
       </a>
 
-      <div class="card c-traduccion disabled">
+      <div class="card c-traduccion disabled" aria-disabled="true">
         <span class="soon-badge">Próximamente</span>
-        <div class="icon">🌡️ → 🌀</div>
+        <div class="icon" aria-hidden="true">🌡️ → 🌀</div>
         <h2>Temperatura y ventilador</h2>
-        <p>Un sensor de temperatura que activa un motor cuando se supera un umbral, con histéresis incluida.</p>
+        <p>TMP36 + motor DC.</p>
         <div class="tags"><span class="tag">TMP36</span><span class="tag">Motor</span></div>
       </div>
 
-      <div class="card disabled">
+      <div class="card disabled" aria-disabled="true">
         <span class="soon-badge">Próximamente</span>
-        <div class="icon">➕</div>
-        <h2>Tu próximo ejemplo</h2>
-        <p>Este espacio está reservado para el siguiente circuito de la serie.</p>
+        <div class="icon" aria-hidden="true">➕</div>
+        <h2>Próximo circuito</h2>
+        <p>En preparación.</p>
       </div>
     </div>
   </div>
@@ -111,8 +153,12 @@
 
 <footer>
   <div class="wrap">
-    Simulación Interactiva Arduino — Esp. Ing. Astri Edith Andrada Tivani<br>
-    <span style="opacity:.8;">Este contenido está bajo licencia <a href="https://github.com/astriandradativani/SimulacionInteractivaArduino/blob/main/LICENSE" style="text-decoration:underline;" target="_blank" rel="noopener">Creative Commons BY-NC-SA 4.0</a>.</span>
+    Simulación Interactiva Arduino — Esp. Ing. Astri Edith Andrada Tivani · Instituto Nuestra Señora del Carmen · 2026<br>
+    <span style="opacity:.8;">
+      Licencia <a href="https://github.com/astriandradativani/SimulacionInteractivaArduino/blob/main/LICENSE" target="_blank" rel="noopener">Creative Commons BY-NC-SA 4.0</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/astriandradativani/SimulacionInteractivaArduino" target="_blank" rel="noopener">Código fuente en GitHub</a>
+    </span>
   </div>
 </footer>
 
