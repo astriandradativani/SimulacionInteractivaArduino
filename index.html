@@ -11,12 +11,23 @@
 <meta property="og:url" content="https://astriandradativani.github.io/SimulacionInteractivaArduino/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#16261c; --bg-panel:#1c3226;
+    /* superficies */
+    --bg:#16261c; --bg-panel:#1c3226; --bg-panel-2:#213a2c;
+
+    /* texto */
     --chalk:#f2ecdd; --chalk-dim:#a9b8ab;
-    --fisico:#e7b44b; --traduccion:#cc8b9c; --digital:#6fc7c2;
+
+    /* categorías pedagógicas (físico / traducción / digital) */
+    --fisico:#e7b44b; --fisico-soft:rgba(231,180,75,.14);
+    --traduccion:#cc8b9c; --traduccion-soft:rgba(204,139,156,.14);
+    --digital:#6fc7c2; --digital-soft:rgba(111,199,194,.14);
+
+    /* alias compartidos con circuito-ultrasonido-servo.html */
+    --amber:#e7b44b; --cyan:#6fc7c2; --copper:#cc8b9c;
+
     --line:rgba(242,236,221,.14);
     --radius:10px;
   }
@@ -47,7 +58,7 @@
     transition:.2s; position:relative; overflow:hidden;
   }
   .card:hover{ border-color:var(--cat-color); transform:translateY(-2px); }
-  .card.disabled{ opacity:.55; cursor:default; }
+  .card.disabled{ opacity:.38; cursor:default; filter:saturate(.3); }
   .card.disabled:hover{ transform:none; border-color:var(--line); }
   .card .icon{ font-size:2rem; }
   .card h2{ margin:0; font-size:1.2rem; }
@@ -58,9 +69,9 @@
     background:var(--cat-soft); color:var(--cat-color);
   }
   .card .go{ font-family:'Space Grotesk'; font-size:.85rem; color:var(--cat-color); }
-  .card.c-fisico{ --cat-color:var(--fisico); --cat-soft:rgba(231,180,75,.14); }
-  .card.c-traduccion{ --cat-color:var(--traduccion); --cat-soft:rgba(204,139,156,.14); }
-  .card.c-digital{ --cat-color:var(--digital); --cat-soft:rgba(111,199,194,.14); }
+  .card.c-fisico{ --cat-color:var(--fisico); --cat-soft:var(--fisico-soft); }
+  .card.c-traduccion{ --cat-color:var(--traduccion); --cat-soft:var(--traduccion-soft); }
+  .card.c-digital{ --cat-color:var(--digital); --cat-soft:var(--digital-soft); }
 
   .soon-badge{
     position:absolute; top:16px; right:16px; font-size:.68rem; color:var(--chalk-dim);
@@ -91,12 +102,16 @@
     border:1px solid var(--line); padding:2px 10px; border-radius:20px; white-space:nowrap;
   }
 
-  /* CARDS DISABLED — más subordinadas */
-  .card.disabled{ opacity:.38; cursor:default; filter:saturate(.3); }
-  .card.disabled:hover{ transform:none; border-color:var(--line); }
-
   footer{padding:34px 0 50px;color:var(--chalk-dim);font-size:.82rem;border-top:1px solid var(--line);margin-top:20px;}
   footer a{color:inherit;text-decoration:underline;}
+
+  @media (prefers-contrast: more) {
+    :root {
+      --line: rgba(242,236,221,.45);
+      --chalk-dim: #d4e0d6;
+      --bg-panel: #142a1e;
+    }
+  }
 </style>
 </head>
 <body>
