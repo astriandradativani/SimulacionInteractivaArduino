@@ -14,11 +14,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
+    /* superficies */
     --bg:#16261c; --bg-panel:#1c3226; --bg-panel-2:#213a2c;
+
+    /* texto */
     --chalk:#f2ecdd; --chalk-dim:#a9b8ab;
+
+    /* categorías pedagógicas (físico / traducción / digital) */
     --fisico:#e7b44b; --fisico-soft:rgba(231,180,75,.14);
     --traduccion:#cc8b9c; --traduccion-soft:rgba(204,139,156,.14);
     --digital:#6fc7c2; --digital-soft:rgba(111,199,194,.14);
+
+    /* alias compartidos con circuito-ultrasonido-servo.html */
+    --amber:#e7b44b; --cyan:#6fc7c2; --copper:#cc8b9c;
+
     --line:rgba(242,236,221,.14);
     --radius:10px;
   }
@@ -251,7 +260,6 @@
       <!-- ═══════════ ZONA 2: LDR + DIVISOR ═══════════ -->
       <line x1="110" y1="52" x2="580" y2="52" stroke="#f2ecdd" stroke-opacity=".25" stroke-width="1.5"/>
       <text x="114" y="46" font-size="12" fill="#a9b8ab" font-family="Inter,sans-serif">5 V</text>
-      <!-- Riel GND recortado (viewBox más chico, sin espacio muerto) -->
       <line x1="110" y1="345" x2="690" y2="345" stroke="#f2ecdd" stroke-opacity=".25" stroke-width="1.5"/>
       <text x="114" y="359" font-size="12" fill="#a9b8ab" font-family="Inter,sans-serif">GND</text>
       <g transform="translate(168,345)">
@@ -273,9 +281,7 @@
       <line x1="168" y1="200" x2="306" y2="200" stroke="#cc8b9c" stroke-width="3"/>
       <rect x="168" y="190" width="136" height="20" rx="4" fill="rgba(204,139,156,.14)" stroke="#cc8b9c" stroke-width="1" stroke-opacity=".5"/>
       <text x="236" y="186" font-size="10" fill="#cc8b9c" text-anchor="middle" font-family="Inter,sans-serif">voltaje analógico</text>
-      <!-- onda sinusoidal SIEMPRE visible; su amplitud crece con la luz (JS la recalcula) -->
       <path id="analogWave" d="M172,200 C182,192 192,208 202,200 C212,192 222,208 232,200 C242,192 252,208 262,200 C272,192 282,208 292,200" fill="none" stroke="#cc8b9c" stroke-width="1.8" class="sig-wave" opacity="0.5"/>
-      <!-- partícula que recorre el cable en loop continuo, transmite "esto viaja" -->
       <circle id="analogParticle" r="4" fill="#cc8b9c" opacity="0.9">
         <animateMotion dur="1.4s" repeatCount="indefinite" path="M172,200 L292,200"/>
       </circle>
@@ -293,7 +299,6 @@
       <g id="bitsFlow" clip-path="url(#clipADC)" opacity="0">
         <text x="322" y="249" font-size="9" fill="#6fc7c2" font-family="JetBrains Mono,monospace" class="sig-bits">0101001011010010</text>
       </g>
-      <!-- bits binarios: ahora SÍ se actualizan por JS, más grandes y con más contraste -->
       <text id="dTextBits" x="362" y="264" font-size="11" font-weight="600" fill="#e9f6f4" text-anchor="middle" font-family="JetBrains Mono,monospace">0000000000</text>
 
       <line x1="406" y1="242" x2="418" y2="242" stroke="#6fc7c2" stroke-width="1.8" marker-end="url(#arr)"/>
@@ -305,17 +310,14 @@
       <g id="pwmBitsFlow" clip-path="url(#clipCPU)" opacity="0">
         <text x="422" y="249" font-size="10" fill="#cc8b9c" font-family="JetBrains Mono,monospace" class="sig-bits">11001100 11001100</text>
       </g>
-      <!-- pin ~9: reubicado fuera del box CPU, debajo del cable de salida, ya no se superpone -->
       <text x="537" y="248" font-size="12" fill="#cc8b9c" text-anchor="middle" font-family="Inter,sans-serif">~9</text>
 
       <!-- ═══════════ ZONA 4: SALIDA PWM ═══════════ -->
       <line x1="536" y1="230" x2="570" y2="230" stroke="#cc8b9c" stroke-width="3"/>
       <path d="M570,230 L578,222 L586,238 L594,222 L602,238 L610,230" stroke="#f2ecdd" stroke-opacity=".7" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-      <!-- R 220: reubicado debajo del resistor, ya no se pisa con "señal PWM" -->
       <text x="590" y="252" font-size="12" fill="#a9b8ab" text-anchor="middle" font-family="Inter,sans-serif">R 220</text>
       <line x1="610" y1="230" x2="642" y2="230" stroke="#cc8b9c" stroke-width="3"/>
       <rect x="536" y="218" width="106" height="18" rx="3" fill="rgba(204,139,156,.14)" stroke="#cc8b9c" stroke-width="1" stroke-opacity=".5"/>
-      <!-- señal PWM: subida, separada por completo de R 220 -->
       <text x="589" y="198" font-size="10" fill="#cc8b9c" text-anchor="middle" font-family="Inter,sans-serif">señal PWM</text>
       <path id="pwmWave" d="M538,230 L544,230 L544,222 L552,222 L552,230 L560,230 L560,222 L568,222 L568,230 L576,230 L576,222 L584,222 L584,230 L592,230 L592,222 L600,222 L600,230 L608,230 L608,222 L616,222 L616,230 L624,230 L624,222 L632,222 L632,230 L640,230" fill="none" stroke="#cc8b9c" stroke-width="1.8" class="sig-pwm" stroke-dasharray="12 6" opacity="0"/>
 
@@ -566,28 +568,23 @@ function update(){
   const ledPct = Math.round((pwm/255) * 100);         // 0-100
   const bits = adc.toString(2).padStart(10,'0');
   lastValues = { intensity, voltage, adc, pwm, ledPct, bits };
-  // sun visual
   const rayOp = 0.35 + (intensity/100)*0.65;
   document.querySelectorAll('.sunray').forEach(r=>{
     r.setAttribute('stroke-opacity', rayOp);
   });
   sunCore.setAttribute('fill', intensity > 50 ? '#e7b44b' : '#8a7134');
   sunCore.setAttribute('r', 20 + (intensity/100)*6);
-  // onda sinusoidal analógica: amplitud crece con la intensidad (más señal, más luz)
   const amp = 4 + (intensity/100)*10;
   const y0 = 200;
   const analogPath = `M172,${y0} C182,${y0-amp} 192,${y0+amp} 202,${y0} C212,${y0-amp} 222,${y0+amp} 232,${y0} C242,${y0-amp} 252,${y0+amp} 262,${y0} C272,${y0-amp} 282,${y0+amp} 292,${y0}`;
   document.getElementById('analogWave').setAttribute('d', analogPath);
-  // diagram readouts
   document.getElementById('dTextV').textContent = voltage.toFixed(2) + ' V';
   document.getElementById('dTextADC').textContent = adc;
-  document.getElementById('dTextBits').textContent = bits; // bug corregido: ahora sí se actualiza
+  document.getElementById('dTextBits').textContent = bits;
   document.getElementById('dTextPWM').textContent = 'PWM ' + pwm;
-  // LED glow
   ledGlow.setAttribute('opacity', (ledPct/100 * 0.55).toFixed(2));
   ledRays.setAttribute('opacity', ledPct > 8 ? Math.min(1, ledPct/100 + .15).toFixed(2) : 0);
   ledFill.setAttribute('opacity', (0.15 + (ledPct/100)*0.85).toFixed(2));
-  // pipeline live readouts
   document.getElementById('live-sun').innerHTML =
     `<span class="readout">${intensity}% de intensidad solar</span>`;
   document.getElementById('live-voltage').innerHTML =
@@ -609,23 +606,18 @@ slider.addEventListener('input', ()=>{
   if(playing) return;
   update();
 });
-update(); // inicializa con 50% → valores no nulos desde el arranque
-// ---------- Referencias nuevas del SVG ----------
+update();
 const lightWave  = document.getElementById('lightWave');
 const analogWave = document.getElementById('analogWave');
 const bitsFlow   = document.getElementById('bitsFlow');
 const pwmBitsFlow= document.getElementById('pwmBitsFlow');
 const pwmWave    = document.getElementById('pwmWave');
-
-// las señales analógicas (luz/voltaje) quedan siempre visibles a baja opacidad como "latido" continuo;
-// las digitales (bits/PWM) solo se destacan durante el recorrido paso a paso
 function hideSigs(){
   [bitsFlow,pwmBitsFlow,pwmWave].forEach(s=>{ if(s) s.setAttribute('opacity','0'); });
   if(lightWave)  lightWave.setAttribute('opacity','0.5');
   if(analogWave) analogWave.setAttribute('opacity','0.5');
 }
-hideSigs(); // estado inicial
-
+hideSigs();
 // ---------- Animación "viaje del dato" ----------
 const playBtn = document.getElementById('playBtn');
 const playStatus = document.getElementById('playStatus');
@@ -641,13 +633,11 @@ async function playJourney(){
   for(let i=0; i<stages.length; i++){
     const s = stages[i];
     playStatus.textContent = `Etapa ${i+1} de ${stages.length}`;
-    // mover punto viajero
     dataDot.setAttribute('cx', s.dot.x);
     dataDot.setAttribute('cy', s.dot.y);
     dataDot.setAttribute('r', '8');
     dataDot.setAttribute('fill', s.cat==='fisico' ? '#e7b44b' : s.cat==='traduccion' ? '#cc8b9c' : '#6fc7c2');
     clearHalos(); hideSigs();
-    // activar señal correspondiente a la etapa
     if(s.sig){
       const sigEl = document.getElementById(s.sig);
       if(sigEl) sigEl.setAttribute('opacity','1');
